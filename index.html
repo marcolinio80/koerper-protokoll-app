@@ -1599,6 +1599,27 @@ function fastenJetzt(tage, d, jetzt){
   return Object.assign(leer, {zustand:"fastet", seit:vorbei.ende.toISOString(), stunden:h, phase:ph.name});
 }
 
+function phaseVon(stunden){
+  if (stunden === null || stunden === undefined) return null;
+  return CONFIG.fastenPhasen.find(ph => stunden < ph.bis)
+      || CONFIG.fastenPhasen[CONFIG.fastenPhasen.length - 1];
+}
+
+/** Fastenzeit fuer das Fastenpanel: {stunden, laeuft, geplant}. Fuer einen vergangenen
+    Tag die ganze Fastenzeit bis zum Beginn seines Fensters (fastenStunden). Fuer heute,
+    solange noch gefastet wird, die Zeit bis jetzt — sonst stand „← hier“ dort, wo man erst
+    beim geplanten Fensterbeginn ist (Marco, 26.10.2026: „es müsste bei 12-18 stehen“).
+    geplant ist die ganze Fastenzeit bis zum Fensterbeginn. */
+function fastenStand(tage, d, jetzt){
+  const e = tage.find(t => t.d === d) || null;
+  const geplant = fastenStunden(e, vortagVon(tage, d));
+  if (d === alsText(jetzt)){
+    const f = fastenJetzt(tage, d, jetzt), fe = essensfenster(e);
+    if (f.zustand === "fastet" && fe && jetzt < fe.beginn) return {stunden:f.stunden, laeuft:true, geplant:geplant};
+  }
+  return {stunden:geplant, laeuft:false, geplant:geplant};
+}
+
 /** Der Tagesstand fuer heute (jetzt), rein: gleiche Eingabe, gleiche Ausgabe.
     nachschlagen(id) → Lebensmittel, fuer Zeilen ohne Kohlenhydrate (siehe tagNaehrstoff). */
 function tagesstand(s, jetzt, nachschlagen){
@@ -2775,7 +2796,7 @@ function stateVorgabe(){
   };
 }
 
-const VERSION = "1.8.1";
+const VERSION = "1.8.2";
 
 let STATE = stateVorgabe();
 /* Naehrwerte aus naehrwerte.js. Die eigenen Produkte liegen im Protokoll und
@@ -4000,26 +4021,25 @@ function fastenBalkenSvg(stunden, schnitt){
     + teile.join("") + '</svg>';
 }
 
-function phaseVon(stunden){
-  if (stunden === null || stunden === undefined) return null;
-  return CONFIG.fastenPhasen.find(ph => stunden < ph.bis)
-      || CONFIG.fastenPhasen[CONFIG.fastenPhasen.length - 1];
-}
-
 function fastenZeichnen(){
   const achse = zeitachse(STATE.tage, STATE.ansicht.zeitraum);
   const werte = achse.map(a => a.eintrag ? fastenStunden(a.eintrag, vortagVon(STATE.tage, a.d)) : null)
                      .filter(x => x !== null);
   const e = tagEintrag();
-  const heuteWert = fastenStunden(e, e ? vortagVon(STATE.tage, e.d) : null);
+  // Heute, solange gefastet wird: bis jetzt \u2014 sonst die ganze Fastenzeit (fastenStand, Schicht 3)
+  const stand = fastenStand(STATE.tage, gewaehlterTag || heute(), new Date());
+  const heuteWert = stand.stunden;
   const schnitt = werte.length ? werte.reduce((a, b) => a + b, 0) / werte.length : null;
   const laengste = werte.length ? Math.max.apply(null, werte) : null;
   const fenster = fensterStunden(e);
   const ph = phaseVon(heuteWert);
+  const phGeplant = stand.laeuft ? phaseVon(stand.geplant) : null;
 
   $("fastenSummen").innerHTML = [
-    kachel("Gew\u00e4hlter Tag", heuteWert === null ? "\u2014" : fmt(heuteWert, 1), "h",
-           ph ? ph.name : "Vortag fehlt", true),
+    kachel(stand.laeuft ? "Jetzt" : "Gew\u00e4hlter Tag", heuteWert === null ? "\u2014" : fmt(heuteWert, 1), "h",
+           ph ? ph.name + (stand.laeuft && stand.geplant !== null
+                  ? " \u00b7 um " + e.fVon + ": " + fmt(stand.geplant, 1) + " h" : "")
+              : "Vortag fehlt", true),
     kachel("\u00d8 im Zeitraum", schnitt === null ? "\u2014" : fmt(schnitt, 1), "h",
            werte.length + " von " + achse.length + " Tagen"),
     kachel("L\u00e4ngste", laengste === null ? "\u2014" : fmt(laengste, 1), "h", ""),
@@ -4038,8 +4058,10 @@ function fastenZeichnen(){
     h += '<tr' + (drin ? ' style="background:var(--accent-soft)"' : "") + '>'
       + '<td class="mono" style="color:var(--ink-2)">' + von + '\u2013' + p2.bis + ' h</td>'
       + '<td style="font-weight:600">' + esc(p2.name)
-      + (drin ? ' <span style="color:var(--accent);font-weight:650">\u2190 hier</span>'
+      + (drin ? ' <span style="color:var(--accent);font-weight:650">\u2190 ' + (stand.laeuft ? "jetzt" : "hier") + '</span>'
               : erreicht ? ' <span style="color:var(--ok)">\u2713</span>' : "")
+      // laeuft das Fasten noch: wo man beim geplanten Fensterbeginn sein wird
+      + (phGeplant === p2 && !drin ? ' <span style="color:var(--ink-3)">\u2192 um ' + esc(e.fVon) + '</span>' : "")
       + '</td><td style="white-space:normal;color:var(--ink-2)">' + esc(p2.text) + '</td></tr>';
     von = p2.bis;
   }
