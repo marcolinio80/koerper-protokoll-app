@@ -584,8 +584,8 @@ body.geraet #serverPanel{display:block}
     <!-- ---------------- links: Person und Ziel ---------------- -->
     <div class="stack" data-tab="einst">
 
-      <section class="panel">
-        <h2><span>Person</span><span class="hint" id="personHint"></span></h2>
+      <details class="panel acc" id="accPerson">
+        <summary><span>Person</span><span class="hint" id="personHint"></span></summary>
         <div class="body">
           <div class="row2">
             <div class="field">
@@ -612,10 +612,10 @@ body.geraet #serverPanel{display:block}
             trägst du im Protokoll ein; sie werden dort gesondert gerechnet, damit ein
             Ruhetag nicht mit einem Wandertag verwechselt wird.</p>
         </div>
-      </section>
+      </details>
 
-      <section class="panel">
-        <h2><span>Zielwerte</span><span class="hint" id="zielHint"></span></h2>
+      <details class="panel acc" id="accZiel">
+        <summary><span>Zielwerte</span><span class="hint" id="zielHint"></span></summary>
         <div class="body">
           <div class="field">
             <label for="defizit">Tägliches Defizit</label>
@@ -649,10 +649,10 @@ body.geraet #serverPanel{display:block}
             <input type="number" id="zuckerZiel" min="5" max="200" step="5">
           </div>
         </div>
-      </section>
+      </details>
 
-      <section class="panel" id="serverPanel">
-        <h2><span>Server</span><span class="hint" id="serverHint"></span></h2>
+      <details class="panel acc" id="serverPanel">
+        <summary><span>Server</span><span class="hint" id="serverHint"></span></summary>
         <div class="body">
           <div class="field">
             <label for="serverUrl">Adresse</label>
@@ -674,7 +674,7 @@ body.geraet #serverPanel{display:block}
             Server bewahrt die letzten Stände als Sicherung auf. Am PC dafür die Webadresse der
             App öffnen, nicht die Datei — abgeglichen wird nur dort.</p>
         </div>
-      </section>
+      </details>
 
       <details class="panel acc" id="accAkt">
         <summary><span>Aktivitätsarten</span><span class="hint" id="aktHint"></span></summary>
@@ -2187,7 +2187,8 @@ function cortanaPruefen(datei, p){
   const n = {neu:0, pruef:0, weg:0, bekannt:0};
   const raus = {fehler:null, tage:[], n};
   if (!istCortanaDatei(datei)){ raus.fehler = "Das ist keine Cortana-Datei (quelle ist nicht „cortana“)."; return raus; }
-  if (datei.version !== 1){ raus.fehler = "Version " + datei.version + " kennt diese Anwendung nicht, nur Version 1."; return raus; }
+  // Version 2 (26.10.2026): Essenszeilen duerfen kh, zucker und zz tragen; 1 gilt weiter
+  if (datei.version !== 1 && datei.version !== 2){ raus.fehler = "Version " + datei.version + " kennt diese Anwendung nicht, nur Version 1 und 2."; return raus; }
   if (!Array.isArray(datei.tage)){ raus.fehler = "Die Datei enthält keine Tage."; return raus; }
 
   const bekannt = new Set(p.cids || []), gesehen = new Set();
@@ -2242,7 +2243,15 @@ function cortanaPruefen(datei, p){
       const kcal = zahl(z.kcal);
       if (!String(z.t || "").trim()) return ["weg", "ohne Bezeichnung"];
       if (kcal === null || kcal < 0) return ["weg", "ohne kcal, die Zeile würde als 0 zählen"];
-      if (!leer(z.protein) && !(zahl(z.protein) >= 0)) return ["weg", "Protein ist keine Zahl"];
+      // ausdruecklich auf null: in JavaScript ist null >= 0 wahr — so kam bis 1.6.0
+      // ein Protein „viel“ durch die Pruefung
+      const keineZahl = v => zahl(v) === null || zahl(v) < 0;
+      if (!leer(z.protein) && keineZahl(z.protein)) return ["weg", "Protein ist keine Zahl"];
+      if (!leer(z.kh) && keineZahl(z.kh)) return ["weg", "Kohlenhydrate sind keine Zahl"];
+      if (!leer(z.zucker) && keineZahl(z.zucker)) return ["weg", "Zucker ist keine Zahl"];
+      if (!leer(z.kh) && !leer(z.zucker) && zahl(z.zucker) > zahl(z.kh))
+        return ["weg", "mehr Zucker als Kohlenhydrate — Zucker ist ein Teil davon"];
+      if (!leer(z.zz) && z.zz !== 0 && z.zz !== 1) return ["weg", "Zuckerzusatz ist nicht 1 (mit) oder 0 (ohne)"];
       if (!leer(z.gr) && gruppen.indexOf(z.gr) < 0)
         return ["neu", "Mahlzeit „" + z.gr + "“ gibt es nicht, kommt unter „Ohne Mahlzeit“"];
       return ["neu", z.q ? "aus " + z.q + ", Werte unverändert" : ""];
@@ -2260,7 +2269,8 @@ function cortanaPruefen(datei, p){
     });
     pruefe("akt", z => {
       for (const [f, name] of [["min","Dauer"], ["dist","Distanz"], ["hm","Höhenmeter"]])
-        if (!leer(z[f]) && !(zahl(z[f]) >= 0)) return ["weg", name + " ist keine gültige Zahl"];
+        // ausdruecklich auf null (null >= 0 ist wahr), siehe die Pruefung beim Essen
+        if (!leer(z[f]) && (zahl(z[f]) === null || zahl(z[f]) < 0)) return ["weg", name + " ist keine gültige Zahl"];
       if (!String(z.art || "").trim()) return ["weg", "ohne Art"];
       // Erst die Kennung, dann der Name: „Krafttraining“ ist die Art kraft
       const art = arten.find(a => a.id === z.art) || arten.find(a => norm(a.name) === norm(z.art));
@@ -2460,6 +2470,10 @@ function cortanaZeile(z){
     const r = {t:String(q.t).trim(), kcal:zahl(q.kcal), protein:leerOder(q.protein)};
     if (CONFIG.mahlzeiten.some(m => m.name === q.gr)) r.gr = q.gr;
     if (q.lm){ r.lm = q.lm; r.q = q.q; r.menge = q.menge; r.einh = q.einh; r.basis = q.basis; }
+    // Vertrag Version 2: nur was mitkommt, nichts wird 0
+    if (zahl(q.kh) !== null) r.kh = zahl(q.kh);
+    if (zahl(q.zucker) !== null) r.zucker = zahl(q.zucker);
+    if (q.zz === 0 || q.zz === 1) r.zz = q.zz;
     r.cid = q.cid;
     return r;
   }
@@ -2686,7 +2700,7 @@ function stateVorgabe(){
   };
 }
 
-const VERSION = "1.6.0";
+const VERSION = "1.7.0";
 
 let STATE = stateVorgabe();
 /* Naehrwerte aus naehrwerte.js. Die eigenen Produkte liegen im Protokoll und
@@ -5212,6 +5226,20 @@ function start(){
   $("btnLaden").onclick = ladenKlick;
   // Wert gleich leeren: sonst meldet das Feld dieselbe Datei kein zweites Mal
   $("fileLaden").onchange = e => { ladenDatei(e.target.files[0]); e.target.value = ""; };
+
+  /* Person, Zielwerte und Server lassen sich einklappen (Marco, 26.10.2026). Offen oder
+     zu merkt sich jedes Geraet selbst — das ist Bedienung, nicht Protokoll, und reist
+     darum nicht mit dem Abgleich. Vorgabe: zu, ausser Server, solange keiner verbunden ist.
+     Die Kurzangabe rechts in der Kopfzeile (personHint, zielHint, serverHint) bleibt sichtbar. */
+  for (const id of ["accPerson", "accZiel", "serverPanel"]){
+    const el = $(id);
+    let offen = null;
+    try { offen = localStorage.getItem("koerper.offen." + id); } catch(e){}
+    el.open = offen === null ? (id === "serverPanel" && GERAET && !serverZiel) : offen === "1";
+    el.addEventListener("toggle", () => {
+      try { localStorage.setItem("koerper.offen." + id, el.open ? "1" : "0"); } catch(e){}
+    });
+  }
 
   markeZeichnen();
   alleFelderSetzen();
