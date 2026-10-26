@@ -5,7 +5,7 @@
    Handy die alte Fassung. Die Daten des Protokolls liegen NICHT hier, sondern
    im Speicher der Seite; ein neuer Stand loescht sie nicht. */
 "use strict";
-const STAND = "1.8.2-b45cce76fb81";
+const STAND = "1.9.0-d6e0a90fe488";
 const CACHE = "koerper-protokoll-" + STAND;
 const DATEIEN = ["./", "index.html", "naehrwerte.js", "manifest.webmanifest", "app-192.png", "app-512.png"];
 

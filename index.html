@@ -324,11 +324,19 @@ table.lm td button:hover{background:var(--bad-bg);color:var(--bad-ink);border-co
 .mass .v{font-size:21px;font-weight:600;letter-spacing:-.015em;margin-top:2px}
 .mass .u{font-size:12px;font-weight:500;color:var(--ink-3);margin-left:3px}
 .mass .t{font-size:11.5px;margin-top:2px}
-.ringe{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
-.ring{text-align:center;width:96px}
-.ring svg{display:block;margin:0 auto}
-.ring .n{font-size:11px;color:var(--ink-3);margin-top:2px;line-height:1.25}
-.ring .n b{display:block;color:var(--ink-2);font-weight:600;font-size:12px}
+/* Ringe ineinander mit Liste daneben (Tag und Fasten), siehe kreisSvg() */
+.kreis{display:flex;flex-wrap:wrap;gap:16px 22px;align-items:center}
+.kreis svg{flex:none;max-width:100%;height:auto}
+.kreisliste{flex:1;min-width:230px;display:flex;flex-direction:column;gap:5px}
+.kreiszeile{display:flex;gap:8px;align-items:baseline;font-size:13px}
+.kreiszeile .f{width:11px;height:11px;border-radius:50%;flex:none;align-self:center}
+.kreiszeile .n{font-weight:600;min-width:118px}
+.kreiszeile .m{color:var(--ink-3);font-size:12px;white-space:nowrap}
+@media (max-width:700px){ .kreiszeile .n{min-width:104px} }
+.kreiszeile .w{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums}
+.kreiszeile .w small{display:block;color:var(--ink-3);font-size:11px}
+.kreiszeile.erfuellt .n{font-weight:400;color:var(--ink-2)}
+.kreiszeile.ohne{color:var(--ink-3)}
 
 /* ---------- Belastung ---------- */
 .bel{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;padding:14px 16px}
@@ -872,8 +880,18 @@ body.geraet #serverPanel{display:block}
         <div class="masse" id="masse"></div>
         <div>
           <div class="feldlabel" style="margin-bottom:8px">Gewählter Tag</div>
-          <div class="ringe" id="ringe"></div>
-          <p class="explain" style="margin-top:10px"><b>Kohlenhydrate</b> und <b>Zucker</b> beziehen sich
+          <div id="ringe"></div>
+          <div class="feldlabel" style="margin:16px 0 8px">Fasten</div>
+          <div id="fastenKreis"></div>
+          <p class="explain" style="margin-top:10px">Bei den <b>Tagesringen</b> steht in der Mitte, wie viele
+            kcal heute noch frei sind; aussen Kalorien, dann Protein, Aktivität (Bezug 60 min, keine
+            Vorgabe), Kohlenhydrate und Zucker. Alkohol hat keinen Ring — dafür gibt es keine
+            Bezugsgrösse, und ein Ring gegen eine erfundene Grenze wäre eine Bewertung. Bei den
+            <b>Fastenringen</b> füllen sich alle sechs ab dem letzten Essen, jeder so schnell, dass er
+            voll ist, wenn seine Phase erreicht ist. Die Phasen sind eine grobe Orientierung, keine
+            Messung: der Ablauf schwankt zwischen Menschen und hängt von der letzten Mahlzeit und der
+            Bewegung ab; zur oft genannten Autophagie gibt es beim Menschen kaum belastbare Messungen.</p>
+          <p class="explain"><b>Kohlenhydrate</b> und <b>Zucker</b> beziehen sich
             auf Bezugsgrössen, nicht auf Empfehlungen: ein Anteil am Kalorienziel und 50 g, beides unter
             „Zielwerte“ einstellbar. Die 50 g sind an die WHO angelehnt (freier Zucker unter 10 % der
             Energie). Die Tabellen zählen aber <i>allen</i> Zucker, auch den aus Früchten und Milch —
@@ -1618,6 +1636,48 @@ function fastenStand(tage, d, jetzt){
     if (f.zustand === "fastet" && fe && jetzt < fe.beginn) return {stunden:f.stunden, laeuft:true, geplant:geplant};
   }
   return {stunden:geplant, laeuft:false, geplant:geplant};
+}
+
+/** Fastenringe im Koerperbild: je Phase ein Ring, alle fuellen sich ab 0 h, jeder ist voll
+    beim Ende seiner Phase (Marco, 26.10.2026: „alle ringe beginnen sich ab minute 0 zu füllen,
+    halt weniger schnell“). zustand: erfuellt / jetzt / kommt; noch = Stunden bis zum Ende der
+    laufenden Phase, in = Stunden bis eine kommende beginnt. null ohne Fastenzeit. */
+function fastenRinge(stunden){
+  if (stunden === null || stunden === undefined) return null;
+  let von = 0;
+  return CONFIG.fastenPhasen.map(p => {
+    const r = {name:p.name, von:von, bis:p.bis, anteil:Math.max(0, Math.min(1, stunden / p.bis)),
+               zustand:stunden >= p.bis ? "erfuellt" : stunden >= von ? "jetzt" : "kommt"};
+    if (r.zustand === "jetzt") r.noch = runde(p.bis - stunden, 1);
+    if (r.zustand === "kommt") r.in = runde(von - stunden, 1);
+    von = p.bis;
+    return r;
+  });
+}
+
+/** Die Ringe des Tages aus dem Tagesstand — dieselben Zahlen wie auf der Uhr und bei Cortana
+    (Marco, 26.10.2026: „mach die gleiche grafik mit den kalorien, protein, aktivi usw“).
+    Zahlen, kein Text: formatiert wird beim Zeichnen. art: ziel (Faustformel, editierbar),
+    bezug (Bezugsgroesse, keine Vorgabe), keiner (kein Ring — Alkohol hat keine Bezugsgroesse,
+    ein Ring gegen eine erfundene Grenze waere eine Bewertung). mindestens: nicht alle Zeilen
+    tragen den Wert, die Zahl ist eine Untergrenze („≥“). wert null = nicht bekannt. */
+function tagesRinge(t){
+  const anteil = (w, b) => w !== null && w !== undefined && b ? w / b : 0;
+  const k = t.kcal, p = t.protein, kh = t.kh, z = t.zucker, tr = t.training;
+  const ring = (name, wert, bezug, einheit, art, mindestens, teile) =>
+    ({name, anteil:art === "keiner" ? null : anteil(wert, bezug), wert:wert === undefined ? null : wert,
+      bezug, einheit, mindestens:!!mindestens, teile:teile || null, art});
+  return [
+    ring("Kalorien", k.aufgenommen, k.ziel, "kcal", "ziel"),
+    ring("Protein", p.aufgenommen, p.ziel, "g", "ziel"),
+    ring("Aktivität", tr.min, 60, "min", "bezug"),
+    ring("Kohlenhydrate", kh.g, kh.bezug, "g", "bezug", kh.bekannt < kh.zeilen),
+    ring("Zucker", z.g, z.bezug, "g", "bezug", z.bekannt < z.zeilen,
+         z.g === null || !z.bezug ? null : [{anteil:z.zusatz / z.bezug, art:"zusatz"},
+                                            {anteil:z.ohne / z.bezug, art:"ohne"},
+                                            {anteil:z.offen / z.bezug, art:"offen"}]),
+    ring("Alkohol", t.alkohol.glaeser, null, "Gläser", "keiner"),
+  ];
 }
 
 /** Der Tagesstand fuer heute (jetzt), rein: gleiche Eingabe, gleiche Ausgabe.
@@ -2796,7 +2856,7 @@ function stateVorgabe(){
   };
 }
 
-const VERSION = "1.8.2";
+const VERSION = "1.9.0";
 
 let STATE = stateVorgabe();
 /* Naehrwerte aus naehrwerte.js. Die eigenen Produkte liegen im Protokoll und
@@ -3867,34 +3927,99 @@ function pfeil(t, dez, einheit, runterIstGut){
     + (d < 0 ? "\u2193 " : "\u2191 ") + fmt(Math.abs(d), dez) + " " + einheit + '</span>';
 }
 
-/** Ring fuer „erreicht von Ziel“. Ueber 100 % laeuft er nicht weiter — er faerbt um. */
-/* teile (wahlweise): [{anteil, farbe}] nacheinander auf dem Ring, z. B. Zucker mit
-   und ohne Zusatz. Ueber 100 % wird auf den vollen Ring gestaucht; dass es mehr
-   ist, steht dann im Text — ein Ring, der eine zweite Runde dreht, liest sich als Erfolg. */
-function ringSvg(anteil, beschriftung, mitte, unten, teile){
-  const r = 26, u = 2 * Math.PI * r;
-  const voll = Math.max(0, Math.min(1, anteil));
-  const farbe = anteil > 1.02 ? "var(--warn-ink)" : "var(--serie)";
-  const bogen = (von, laenge, f) => '<circle cx="32" cy="32" r="' + r + '" fill="none" stroke="' + f + '" stroke-width="7"'
-    + ' stroke-dasharray="' + (laenge * u).toFixed(1) + ' ' + u.toFixed(1) + '"'
-    + ' transform="rotate(' + (-90 + von * 360).toFixed(1) + ' 32 32)"/>';
-  let ringe;
-  if (teile && teile.length){
-    const summe = teile.reduce((s, t) => s + t.anteil, 0);
-    const mass = summe > 1 ? 1 / summe : 1;
-    let von = 0;
-    ringe = teile.filter(t => t.anteil > 0).map(t => { const b = bogen(von, t.anteil * mass, t.farbe); von += t.anteil * mass; return b; }).join("");
-  } else {
-    ringe = '<circle cx="32" cy="32" r="' + r + '" fill="none" stroke="' + farbe + '" stroke-width="7"'
-      + ' stroke-linecap="round" stroke-dasharray="' + (voll * u).toFixed(1) + ' ' + u.toFixed(1) + '"'
-      + ' transform="rotate(-90 32 32)"/>';
-  }
-  return '<div class="ring"><svg viewBox="0 0 64 64" width="64" height="64">'
-    + '<circle cx="32" cy="32" r="' + r + '" fill="none" stroke="var(--sunken)" stroke-width="7"/>'
-    + ringe
-    + '<text x="32" y="36" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">'
-    + esc(mitte) + '</text></svg>'
-    + '<div class="n"><b>' + esc(beschriftung) + '</b>' + unten + '</div></div>';
+/* --- Ringe ineinander (1.9.0) --------------------------------------------
+   Marco, 26.10.2026: Fastenphasen „in einer kreisgrafik … 6 kreise ineinander“, „die ringe
+   sich füllen“, „und mach die gleiche grafik mit den kalorien, protein, aktivi usw“.
+   Entwurf/Entwurf-Fastenringe.html, freigegeben. ringe: aussen zuerst, [{anteil, farbe, deck,
+   teile}]. Ueber 100 % laeuft ein Ring nicht weiter, er faerbt um — ein Ring, der eine zweite
+   Runde dreht, liest sich als Erfolg. teile: [{anteil, farbe}] nacheinander auf demselben Ring
+   (Zucker mit/ohne Zusatz), ueber 100 % auf den vollen Ring gestaucht. */
+function kreisSvg(ringe, gross, klein){
+  const M = 130, R0 = 122, B = 10, L = 3;     // innerster von sechs: r = 57, Platz fuer die Mitte
+  let s = '<svg viewBox="0 0 260 260" width="220" height="220" role="img" aria-label="'
+        + esc(gross + " " + klein) + '">';
+  ringe.forEach((ring, i) => {
+    const r = R0 - i * (B + L), u = 2 * Math.PI * r;
+    const bogen = (von, laenge, farbe, deck, rund) => laenge <= 0 ? "" :
+      '<circle cx="' + M + '" cy="' + M + '" r="' + r + '" fill="none" stroke="' + farbe + '"'
+      + (deck !== undefined ? ' stroke-opacity="' + deck.toFixed(2) + '"' : "")
+      + ' stroke-width="' + B + '"' + (rund ? ' stroke-linecap="round"' : "")
+      + ' stroke-dasharray="' + (Math.min(1, laenge) * u).toFixed(1) + ' ' + u.toFixed(1) + '"'
+      + ' transform="rotate(' + (-90 + von * 360).toFixed(1) + ' ' + M + ' ' + M + ')"/>';
+    s += '<circle cx="' + M + '" cy="' + M + '" r="' + r + '" fill="none" stroke="var(--sunken)" stroke-width="' + B + '"/>';
+    if (ring.teile && ring.teile.length){
+      const summe = ring.teile.reduce((a, t) => a + t.anteil, 0), mass = summe > 1 ? 1 / summe : 1;
+      let von = 0;
+      for (const t of ring.teile){ s += bogen(von, t.anteil * mass, t.farbe, undefined, false); von += t.anteil * mass; }
+    } else {
+      s += bogen(0, ring.anteil, ring.anteil > 1.02 ? "var(--warn-ink)" : ring.farbe, ring.deck, true);
+    }
+  });
+  s += '<text x="' + M + '" y="' + (M - 2) + '" text-anchor="middle" font-size="22" font-weight="700" fill="var(--ink)"'
+     + ' style="font-variant-numeric:tabular-nums">' + esc(gross) + '</text>'
+     + '<text x="' + M + '" y="' + (M + 16) + '" text-anchor="middle" font-size="11" fill="var(--ink-2)">' + esc(klein) + '</text>';
+  return s + '</svg>';
+}
+/** Eine Zeile der Liste neben den Ringen. */
+function kreisZeile(farbe, deck, name, mitte, rechts, unten, klasse){
+  return '<div class="kreiszeile' + (klasse ? " " + klasse : "") + '"><span class="f" style="background:' + farbe
+    + (deck !== undefined ? ';opacity:' + deck.toFixed(2) : "") + '"></span><span class="n">' + name + '</span>'
+    + '<span class="m">' + mitte + '</span><span class="w">' + rechts + (unten ? '<small>' + unten + '</small>' : "")
+    + '</span></div>';
+}
+function stundenText(h){ const m = Math.round(h * 60); return Math.floor(m / 60) + " h " + String(m % 60).padStart(2, "0"); }
+// Phasen sind geordnet: ein Farbton von hell nach dunkel, im dunklen Modus kraeftig genug
+function fastenDeck(i){ return 0.32 + i * 0.136; }
+
+/** Die Tagesringe aus tagesRinge(): Ringe fuer alles mit Bezug, Alkohol nur in der Liste. */
+function tagKreisHtml(r, ts){
+  const mitRing = r.filter(x => x.art !== "keiner");
+  /* Jeder Ring eine eigene Helligkeit, der Punkt in der Liste genau dieselbe — sonst sieht
+     man nicht, welcher Ring welcher ist (alle in einem Violett waren nicht zu unterscheiden). */
+  const DECK = [1, 0.8, 0.62, 0.46];
+  const deckVon = name => DECK[mitRing.findIndex(x => x.name === name)];
+  const ringe = mitRing.map((x, i) => x.name === "Zucker" && x.teile
+    ? {teile:x.teile.map(t => ({anteil:t.anteil, farbe:t.art === "zusatz" ? "var(--warn-ink)" : t.art === "ohne" ? "var(--serie)" : "var(--serie-roh)"}))}
+    : {anteil:x.anteil, farbe:"var(--serie)", deck:DECK[i]});
+  const zahl0 = (v, mind) => v === null ? "—" : (mind ? "≥" : "") + fmt(v, 0);
+  const zeilen = r.map(x => {
+    if (x.art === "keiner")
+      return kreisZeile("var(--line-2)", undefined, x.name, "kein Ring", x.wert ? fmt(x.wert, 1) + " " + x.einheit : "keiner",
+                        "", "ohne");
+    const wert = x.name === "Aktivität" ? (x.wert ? fmt(x.wert, 0) + " min" : "Ruhetag") : zahl0(x.wert, x.mindestens) + " " + x.einheit;
+    const bezug = x.bezug === null ? "" : (x.art === "ziel" ? "von " : "Bezug ") + fmt(x.bezug, 0) + (x.einheit === "kcal" ? "" : " " + x.einheit);
+    let unten = x.mindestens ? "nicht alle Zeilen bekannt" : "";
+    if (x.name === "Zucker" && ts.zucker.g !== null)
+      unten = '<span style="color:var(--warn-ink)">mit Zusatz ' + fmt(ts.zucker.zusatz, 0) + ' g</span>'
+        + (ts.zucker.offen ? " · Art unbekannt " + fmt(ts.zucker.offen, 0) + " g" : "") + (unten ? " · " + unten : "");
+    const ueber = x.anteil > 1.02;
+    // Zucker: der Punkt zeigt den Teil „ohne Zusatz“; die Teile stehen in der Zeile darunter
+    return kreisZeile(ueber ? "var(--warn-ink)" : "var(--serie)", ueber ? undefined : deckVon(x.name), x.name, bezug,
+                      (ueber ? '<span style="color:var(--warn-ink)">' : "") + wert + (ueber ? "</span>" : ""), unten);
+  }).join("");
+  const frei = ts.kcal.frei;
+  return '<div class="kreis">' + kreisSvg(ringe, frei === null ? "—" : fmt(Math.abs(frei), 0),
+           frei === null ? "kcal" : frei < 0 ? "kcal über Ziel" : "kcal frei")
+    + '<div class="kreisliste">' + zeilen + '</div></div>';
+}
+
+/** Die Fastenringe: aus fastenStand() (heute bis jetzt) und fastenRinge(). */
+function fastenKreisHtml(stand, e){
+  const ringe = fastenRinge(stand.stunden);
+  if (!ringe) return '<p class="explain" style="margin:0">Für eine Fastenzeit braucht es das Essensfenster von gestern und heute.</p>';
+  const jetzt = ringe.find(x => x.zustand === "jetzt");
+  const zeilen = ringe.map((x, i) => kreisZeile("var(--serie)", fastenDeck(i), esc(x.name)
+      + (x.zustand === "jetzt" ? ' <span style="color:var(--accent)">← ' + (stand.laeuft ? "jetzt" : "hier") + '</span>' : ""),
+    x.von + "–" + x.bis + " h",
+    x.zustand === "erfuellt" ? '<span style="color:var(--ok)">erfüllt ✓</span>'
+      : x.zustand === "jetzt" ? (stand.laeuft ? "noch " + stundenText(x.noch) : "bis " + x.bis + " h")
+      : stand.laeuft ? "in " + stundenText(x.in) : "", "", x.zustand === "erfuellt" ? "erfuellt" : "")).join("");
+  return '<div class="kreis">' + kreisSvg(ringe.map((x, i) => ({anteil:x.anteil, farbe:"var(--serie)", deck:fastenDeck(i)})),
+           stundenText(stand.stunden), jetzt ? jetzt.name : "über 36 h")
+    + '<div class="kreisliste">' + zeilen
+    + (stand.laeuft && stand.geplant !== null && e ? '<div class="kreiszeile" style="color:var(--ink-3)">Um ' + esc(e.fVon)
+        + ' beginnt das Essensfenster: dann ' + stundenText(stand.geplant) + '</div>' : "")
+    + '</div></div>';
 }
 
 function koerperZeichnen(){
@@ -3921,52 +4046,19 @@ function koerperZeichnen(){
   ].join("");
   $("koerperHint").textContent = achse.length ? achse.length + " Tage" : "";
 
-  /* Ringe: der gewaehlte Tag gegen seine Ziele */
-  const e = tagEintrag();
-  const kc = tagKcal(e), pr = tagProtein(e);
-  const um = tagesumsatz(e, STATE.person, g, STATE.aktArten);
-  const zk = um === null ? null : um - STATE.ziel.defizit;
-  const zp = zielProtein(g, STATE.ziel.proKg);
-  const tm = tagTrainMin(e, STATE.aktArten), al = tagAlk(e);
+  koerperRingeZeichnen();
+}
 
-  const ringe = [];
-  ringe.push(ringSvg(kc !== null && zk ? kc/zk : 0, "Kalorien",
-    kc === null ? "\u2014" : Math.round(kc/1000 * 10)/10 + "k",
-    kc === null ? "nichts erfasst" : fmt(kc, 0) + (zk ? " von " + fmt(zk, 0) : "")));
-  ringe.push(ringSvg(pr !== null && zp ? pr/zp : 0, "Protein",
-    pr === null ? "\u2014" : fmt(pr, 0),
-    pr === null ? "nichts erfasst" : "von " + (zp ? fmt(zp, 0) + " g" : "\u2014")));
-  // 60 Minuten als Bezugsgroesse, nicht als Vorschrift — deshalb ohne „Ziel“
-  ringe.push(ringSvg(tm ? tm/60 : 0, "Aktivit\u00e4t", tm ? fmt(tm, 0) : "\u2014",
-    tm ? "Minuten" : "Ruhetag"));
-  ringe.push(ringSvg(0, "Alkohol", al ? fmt(al, 1) : "\u2014", al ? "Gl\u00e4ser" : "keiner"));
-  /* Kohlenhydrate und Zucker (1.6.0). Fehlt bei einer Zeile der Wert (freie
-     Zeile), steht \u201e\u2265\u201c und wie viele Zeilen bekannt sind \u2014 eine zu kleine Zahl
-     soll nicht vollstaendig aussehen. */
-  const naehr = (r, bezug, titel) => {
-    const teil = r.bekannt < r.zeilen;
-    ringe.push(ringSvg(r.g !== null && bezug ? r.g/bezug : 0, titel,
-      r.g === null ? "\u2014" : (teil ? "\u2265" : "") + fmt(r.g, 0),
-      r.g === null ? (r.zeilen ? "nicht bekannt" : "nichts erfasst")
-        : (bezug ? "von " + fmt(bezug, 0) + " g" : "g")
-          + (teil ? '<br><span style="color:var(--warn-ink)">' + r.bekannt + " von " + r.zeilen + " Zeilen</span>" : "")));
-  };
-  naehr(tagNaehrstoff(e, "kh", lmVon), zielKohlenhydrate(zk, STATE.ziel.khAnteil), "Kohlenhydrate");
-  /* Zucker in drei Teilen: aus Lebensmitteln mit Zuckerzusatz (Bernstein = Hinweis),
-     ohne (Serienfarbe), Art unbekannt (grau). Eingeteilt je Lebensmittel, siehe tagZuckerArt(). */
-  const zu = tagNaehrstoff(e, "zucker", lmVon), za = tagZuckerArt(e, lmVon), bz = STATE.ziel.zucker;
-  const zuTeil = zu.bekannt < zu.zeilen;
-  ringe.push(ringSvg(0, "Zucker",
-    zu.g === null ? "—" : (zuTeil ? "≥" : "") + fmt(zu.g, 0),
-    zu.g === null ? (zu.zeilen ? "nicht bekannt" : "nichts erfasst")
-      : "von " + fmt(bz, 0) + " g"
-        + '<br><span style="color:var(--warn-ink)">mit Zusatz ' + fmt(za.zusatz, 0) + " g</span>"
-        + (za.offen >= 0.5 ? '<br><span style="color:var(--ink-3)">Art unbekannt ' + fmt(za.offen, 0) + " g</span>" : "")
-        + (zuTeil ? '<br><span style="color:var(--warn-ink)">' + zu.bekannt + " von " + zu.zeilen + " Zeilen</span>" : ""),
-    zu.g === null || !bz ? [] : [{anteil:za.zusatz / bz, farbe:"var(--warn-ink)"},
-                                 {anteil:za.ohne / bz, farbe:"var(--serie)"},
-                                 {anteil:za.offen / bz, farbe:"var(--serie-roh)"}]));
-  $("ringe").innerHTML = ringe.join("");
+/* Ringe des gewaehlten Tages und Fastenringe (1.9.0). Die Tageswerte kommen aus
+   tagesstand() — dieselben Zahlen wie auf der Uhr und bei Cortana. Fuer einen anderen Tag
+   als heute wird mittags gerechnet; das Fasten kommt ohnehin aus fastenStand(). Laeuft
+   jede Minute neu (start), damit die Fastenzeit weiterzaehlt. */
+function koerperRingeZeichnen(){
+  const d = gewaehlterTag || heute();
+  const zeit = d === heute() ? new Date() : (() => { const x = alsDatum(d); x.setHours(12); return x; })();
+  const ts = tagesstand(STATE, zeit, lmVon);
+  $("ringe").innerHTML = tagKreisHtml(tagesRinge(ts), ts);
+  $("fastenKreis").innerHTML = fastenKreisHtml(fastenStand(STATE.tage, d, new Date()), tagEintrag());
 }
 
 /* ---------------- Fastenfenster ---------------- */
@@ -5366,6 +5458,8 @@ function start(){
   dirtyAnzeigen();
   standZeichnen();
   if (GERAET){ serverZeichnen(); abgleichen(); }
+  // Die Fastenzeit laeuft auch ohne Eingabe weiter: Ringe und Fastenpanel jede Minute neu
+  setInterval(() => { if (document.visibilityState === "visible"){ koerperRingeZeichnen(); fastenZeichnen(); } }, 60000);
 }
 
 start();
