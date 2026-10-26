@@ -1620,7 +1620,9 @@ function tagesstand(s, jetzt, nachschlagen){
     kcal:{ziel:ziel, aufgenommen:rund(kc), frei:ziel === null ? null : ziel - (rund(kc) || 0)},
     protein:{ziel:rund(zp), aufgenommen:rund(pr)},
     kh:{g:rund(kh.g), bezug:zielKohlenhydrate(ziel, s.ziel.khAnteil), bekannt:kh.bekannt, zeilen:kh.zeilen},
-    zucker:{g:rund(zu.g), zusatz:rund(za.zusatz), ohne:rund(za.ohne), offen:rund(za.offen),
+    // ist kein Zucker bekannt, sind seine Teile es auch nicht — sonst stuende „0 g mit Zusatz“ da
+    zucker:{g:rund(zu.g), zusatz:zu.g === null ? null : rund(za.zusatz), ohne:zu.g === null ? null : rund(za.ohne),
+            offen:zu.g === null ? null : rund(za.offen),
             bezug:s.ziel.zucker, bekannt:zu.bekannt, zeilen:zu.zeilen},
     training:{min:tagTrainMin(e, arten), kcal:g === null ? null : rund(tagTrainKcal(e, g, arten)),
               einheiten:((e && e.akt) || []).map(a => ({art:((arten.find(x => x.id === a.art) || {}).name) || a.art,
@@ -2773,7 +2775,7 @@ function stateVorgabe(){
   };
 }
 
-const VERSION = "1.8.0";
+const VERSION = "1.8.1";
 
 let STATE = stateVorgabe();
 /* Naehrwerte aus naehrwerte.js. Die eigenen Produkte liegen im Protokoll und
