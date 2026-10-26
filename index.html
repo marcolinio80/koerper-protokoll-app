@@ -1566,6 +1566,79 @@ function tagZuckerArt(e, nachschlagen){
   }
   return {zusatz:runde(r.zusatz, 1), ohne:runde(r.ohne, 1), offen:runde(r.offen, 1)};
 }
+/* --- Tagesstand fuer Cortana und die Uhr ---------------------------------
+   Marco, 26.10.2026: bei Cortana und auf der Samsung-Watch sehen, wie lange schon
+   gefastet wird, was die Ziele sind und was heute gegessen und trainiert wurde.
+   Die App legt diesen Stand auf den Server, Cortana und die Uhr lesen ihn nur.
+   Gerechnet wird damit weiter nur hier, mit denselben Funktionen wie die Ringe. */
+
+/** Essensfenster eines Tages als Zeitpunkte [beginn, ende); ueber Mitternacht
+    endet es am Folgetag. null, wenn Beginn oder Ende fehlt. */
+function essensfenster(tag){
+  const von = uhrMinuten(tag && tag.fVon), bis = uhrMinuten(tag && tag.fBis);
+  if (von === null || bis === null) return null;
+  // ueber setMinutes in Ortszeit, nicht in Millisekunden: am Tag der Zeitumstellung hat ein Tag 23 oder 25 h
+  const beginn = alsDatum(tag.d); beginn.setMinutes(von);
+  const ende = alsDatum(bis > von ? tag.d : tagPlus(tag.d, 1)); ende.setMinutes(bis);
+  return {beginn, ende, bis:tag.fBis};
+}
+
+/** Fasten jetzt: isst gerade (im Fenster), fastet seit dem Ende des letzten
+    Fensters, oder unbekannt — ohne Fenster wird nichts behauptet. Die Phasen sind
+    Orientierung, keine Messung (siehe CONFIG.fastenPhasen und das Fastenpanel). */
+function fastenJetzt(tage, d, jetzt){
+  const fenster = [tage.find(t => t.d === tagPlus(d, -1)), tage.find(t => t.d === d)]
+    .map(essensfenster).filter(Boolean);
+  const leer = {zustand:"unbekannt", seit:null, stunden:null, phase:null, offenBis:null};
+  const offen = fenster.find(f => f.beginn <= jetzt && jetzt < f.ende);
+  if (offen) return Object.assign(leer, {zustand:"isst", offenBis:offen.bis});
+  const vorbei = fenster.filter(f => f.ende <= jetzt).sort((a, b) => b.ende - a.ende)[0];
+  if (!vorbei) return leer;
+  const h = Math.round((jetzt - vorbei.ende) / 360000) / 10;
+  const ph = CONFIG.fastenPhasen.find(p => h < p.bis) || CONFIG.fastenPhasen[CONFIG.fastenPhasen.length - 1];
+  return Object.assign(leer, {zustand:"fastet", seit:vorbei.ende.toISOString(), stunden:h, phase:ph.name});
+}
+
+/** Der Tagesstand fuer heute (jetzt), rein: gleiche Eingabe, gleiche Ausgabe.
+    nachschlagen(id) → Lebensmittel, fuer Zeilen ohne Kohlenhydrate (siehe tagNaehrstoff). */
+function tagesstand(s, jetzt, nachschlagen){
+  const d = alsText(jetzt);
+  const tage = (s && Array.isArray(s.tage)) ? s.tage : [];
+  const e = tage.find(t => t.d === d) || null;
+  const arten = s.aktArten || CONFIG.training;
+  let g = null;                                  // letztes Gewicht bis heute
+  for (const t of sortiert(tage)) if (t.d <= d && zahl(t.gewicht) !== null) g = zahl(t.gewicht);
+  const umsatz = tagesumsatz(e, s.person, g, arten);
+  const ziel = umsatz === null ? null : Math.round(umsatz - s.ziel.defizit);
+  const kc = tagKcal(e), pr = tagProtein(e), zp = zielProtein(g, s.ziel.proKg);
+  const rund = v => v === null || v === undefined ? null : Math.round(v);
+  const kh = tagNaehrstoff(e, "kh", nachschlagen), zu = tagNaehrstoff(e, "zucker", nachschlagen);
+  const za = tagZuckerArt(e, nachschlagen);
+  const f = fastenJetzt(tage, d, jetzt);
+  return {
+    version:1, d:d, erstellt:jetzt.toISOString(),
+    kcal:{ziel:ziel, aufgenommen:rund(kc), frei:ziel === null ? null : ziel - (rund(kc) || 0)},
+    protein:{ziel:rund(zp), aufgenommen:rund(pr)},
+    kh:{g:rund(kh.g), bezug:zielKohlenhydrate(ziel, s.ziel.khAnteil), bekannt:kh.bekannt, zeilen:kh.zeilen},
+    zucker:{g:rund(zu.g), zusatz:rund(za.zusatz), ohne:rund(za.ohne), offen:rund(za.offen),
+            bezug:s.ziel.zucker, bekannt:zu.bekannt, zeilen:zu.zeilen},
+    training:{min:tagTrainMin(e, arten), kcal:g === null ? null : rund(tagTrainKcal(e, g, arten)),
+              einheiten:((e && e.akt) || []).map(a => ({art:((arten.find(x => x.id === a.art) || {}).name) || a.art,
+                                                        min:aktMinuten(a, arten)}))},
+    alkohol:{glaeser:tagAlk(e)},
+    fasten:{zustand:f.zustand, seit:f.seit, stunden:f.stunden, phase:f.phase, offenBis:f.offenBis,
+            fenster:{von:(e && e.fVon) || "", bis:(e && e.fBis) || ""},
+            phasen:CONFIG.fastenPhasen.map(p => ({bis:p.bis, name:p.name}))},
+    hinweis:"Die Fastenphasen sind eine grobe Orientierung, keine Messung. Ziele sind Faustformeln.",
+  };
+}
+/** Fuer „nur bei Aenderung senden“: ohne Uhrzeit und ohne das, was nur aus ihr folgt. */
+function tagesstandSchluessel(t){
+  const k = JSON.parse(JSON.stringify(t));
+  delete k.erstellt; delete k.fasten.stunden; delete k.fasten.phase;
+  return JSON.stringify(k);
+}
+
 /** Die Quellen zur Auswahl in der Suche: so viele, wie die Naehrwertdatei hat. */
 function lmQuellen(nw){
   return ["Alle"].concat(Object.keys((nw && nw.quellen) || {})).concat(["Eigen"]);
@@ -2700,7 +2773,7 @@ function stateVorgabe(){
   };
 }
 
-const VERSION = "1.7.0";
+const VERSION = "1.8.0";
 
 let STATE = stateVorgabe();
 /* Naehrwerte aus naehrwerte.js. Die eigenen Produkte liegen im Protokoll und
@@ -4504,10 +4577,10 @@ function abgleichPlanen(ms){
   abgleichTimer = setTimeout(abgleichen, ms);
 }
 
-async function serverRuf(ziel, methode, daten){
+async function serverRuf(ziel, methode, daten, frage){
   const kopf = {"X-Token": ziel.token};
   if (daten) kopf["Content-Type"] = "application/json";
-  const r = await fetch(ziel.url, {method:methode, headers:kopf, cache:"no-store",
+  const r = await fetch(ziel.url + (frage || ""), {method:methode, headers:kopf, cache:"no-store",
                                    body:daten ? JSON.stringify(daten) : undefined});
   let json = null;
   try { json = await r.json(); } catch(e){}
@@ -4565,6 +4638,7 @@ async function abgleichen(){
       // Was waehrend des Abgleichs eingetragen wurde, kommt obendrauf
       standUebernehmen(JSON.stringify(STATE) === lokalText ? stand : zusammenfuehren(lokal, STATE, stand));
       abgleich.fehler = ""; abgleich.zuletzt = new Date();
+      await tagesstandSenden(ziel);
       break;
     }
   } catch(err){
@@ -4576,6 +4650,22 @@ async function abgleichen(){
     standZeichnen();
     if (!abgleich.fehler && !abgleich.offline && nichtGesendet()) abgleichPlanen(1500);
   }
+}
+
+/* Tagesstand fuer Cortana und die Uhr (tagesstand(), Schicht 3): nach jedem
+   erfolgreichen Abgleich, aber nur, wenn er sich geaendert hat — die Fastenstunden
+   rechnen Cortana und die Uhr ab „seit“ selbst weiter. Weil der Abgleich jede
+   Minute laeuft, geht auch ein neuer Tag oder das Ende des Essensfensters mit.
+   Ein Fehler hier stoert den Abgleich nicht: der Tagesstand ist eine Anzeige. */
+let tagesstandGesendet = null;
+async function tagesstandSenden(ziel){
+  try {
+    const t = tagesstand(STATE, new Date(), lmVon);
+    const k = tagesstandSchluessel(t);
+    if (k === tagesstandGesendet) return;
+    const r = await serverRuf(ziel, "POST", {stand:t}, "?tagesstand");
+    if (r.status === 200) tagesstandGesendet = k;
+  } catch(e){}
 }
 
 function serverZeichnen(){
