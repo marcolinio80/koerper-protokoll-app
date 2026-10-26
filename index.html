@@ -1367,6 +1367,15 @@ function alsText(d){
        + "-" + String(d.getDate()).padStart(2,"0");
 }
 function heute(){ return alsText(new Date()); }
+/** Datum + n Tage, ueber den Kalender — nie in Schritten von 24 Stunden: am
+    Tag der Zeitumstellung hat ein Tag 23 oder 25 Stunden. Mit „+24 h“ stand
+    der 25.10.2026 zweimal in der Zeitachse und der heutige Tag fehlte
+    (Marco, 26.10.2026: das Training von heute fehlte in der Wochenbilanz). */
+function tagPlus(s, n){
+  const d = alsDatum(s);
+  d.setDate(d.getDate() + n);
+  return alsText(d);
+}
 function kurz(s){ const d = alsDatum(s); return String(d.getDate()).padStart(2,"0") + "." + String(d.getMonth()+1).padStart(2,"0"); }
 
 /** ISO-Kalenderwoche — die Woche beginnt am Montag und gehört zum Jahr,
@@ -1393,15 +1402,15 @@ function sortiert(tage){
 function zeitachse(tage, spanne){
   const s = sortiert(tage);
   if (!s.length) return [];
-  const ende = alsDatum(s[s.length-1].d);
-  const anfangMoeglich = alsDatum(s[0].d);
-  const anfang = spanne ? new Date(Math.max(anfangMoeglich, ende - (spanne-1)*TAG)) : anfangMoeglich;
+  // Ueber den Kalender gezaehlt (tagPlus), ISO-Daten lassen sich als Text vergleichen
+  const ende = s[s.length-1].d;
+  let anfang = s[0].d;
+  if (spanne){ const a = tagPlus(ende, -(spanne-1)); if (a > anfang) anfang = a; }
   const nach = {};
   for (const t of s) nach[t.d] = t;
   const out = [];
-  for (let d = new Date(anfang); d <= ende; d = new Date(d.getTime() + TAG)){
-    const k = alsText(d);
-    out.push({d:k, datum:d, eintrag:nach[k] || null});
+  for (let k = anfang; k <= ende; k = tagPlus(k, 1)){
+    out.push({d:k, datum:alsDatum(k), eintrag:nach[k] || null});
   }
   return out;
 }
@@ -1687,7 +1696,7 @@ function fensterStunden(e){
 
 /** Eintrag des vorangehenden Kalendertages, sonst null. */
 function vortagVon(tage, d){
-  const gestern = alsText(new Date(alsDatum(d).getTime() - TAG));
+  const gestern = tagPlus(d, -1);
   return tage.find(t => t.d === gestern) || null;
 }
 
@@ -2323,6 +2332,18 @@ function zusammenfuehren(basis, lokal, server){
   return klon(dreiWege(basis || undefined, lokal, server, lGewinnt));
 }
 
+/** Was ein Abgleich tun soll. eingabeOffen: ein Feld hat den Cursor oder ein
+    Dialog ist offen. Gewartet wird nur, wenn vom Server Neues kommt — das
+    zeichnete den Tag unter dem Cursor neu. Eigenes zu senden zeichnet nichts
+    neu; frueher wartete der Abgleich bei jedem offenen Feld, und am PC, wo der
+    Cursor fast immer in einem Feld steht, wurde nie gesendet (Marco, 26.10.2026). */
+function abgleichPlan(basis, lokal, server, eingabeOffen){
+  const stand = zusammenfuehren(basis, lokal, server);
+  const uebernehmen = !gleichWert(stand, lokal);
+  if (uebernehmen && eingabeOffen) return {warten:true};
+  return {warten:false, senden:!server || !gleichWert(stand, server), uebernehmen:uebernehmen, stand:stand};
+}
+
 /** Eine gepruefte Zeile in der Form, die das Protokoll speichert. */
 function cortanaZeile(z){
   const q = z.z;
@@ -2555,7 +2576,7 @@ function stateVorgabe(){
   };
 }
 
-const VERSION = "1.5.0";
+const VERSION = "1.5.1";
 
 let STATE = stateVorgabe();
 /* Naehrwerte aus naehrwerte.js. Die eigenen Produkte liegen im Protokoll und
@@ -4351,7 +4372,6 @@ function standUebernehmen(neuStand){
 async function abgleichen(){
   if (!GERAET || !serverZiel || abgleichLaeuft) return;
   clearTimeout(abgleichTimer);
-  if (eingabeAktiv()){ abgleichPlanen(3000); return; }
   const ziel = serverZiel;
   abgleichLaeuft = true;
   standZeichnen();
@@ -4360,12 +4380,13 @@ async function abgleichen(){
       const r = await serverRuf(ziel, "GET");
       if (r.status !== 200 || !r.json){ abgleich.fehler = serverFehlerText(r); break; }
       abgleich.offline = false;
-      if (eingabeAktiv()){ abgleichPlanen(3000); break; }
       if (zeilenIds(STATE)) geraetSichern(false);
       const lokalText = JSON.stringify(STATE), lokal = JSON.parse(lokalText);
-      const stand = r.json.stand ? zusammenfuehren(basisStand ? basisStand.stand : null, lokal, r.json.stand) : lokal;
+      const plan = abgleichPlan(basisStand ? basisStand.stand : null, lokal, r.json.stand, eingabeAktiv());
+      if (plan.warten){ abgleichPlanen(3000); break; }   // Neues vom Server, aber der Cursor steht in einem Feld
+      const stand = plan.stand;
       let rev = r.json.rev;
-      if (!r.json.stand || !gleichWert(stand, r.json.stand)){
+      if (plan.senden){
         const w = await serverRuf(ziel, "POST", {rev:rev, stand:stand});
         if (w.status === 409) continue;            // inzwischen hat ein anderes Geraet gesendet
         if (w.status !== 200 || !w.json){ abgleich.fehler = serverFehlerText(w); break; }
@@ -4862,7 +4883,7 @@ function start(){
   $("tagZurueck").onclick = () => blaettern(-1);
   $("tagVor").onclick     = () => blaettern(1);
   $("tagHeute").onclick   = () => tagSetzen(heute(), true);
-  $("tagGestern").onclick = () => tagSetzen(alsText(new Date(Date.now() - TAG)), true);
+  $("tagGestern").onclick = () => tagSetzen(tagPlus(heute(), -1), true);
   $("tagWahl").onchange   = ev => tagSetzen(ev.target.value, false);
   $("tagKopie").onclick   = () => {
     // Uebernimmt Positionen und Aktivitaeten des letzten frueheren Tages —
