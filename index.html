@@ -42,6 +42,13 @@
   --serie:#6a4bab;
   --serie-roh:#a3aab4;
   --gitter:#e2e6eb;
+  /* Ringe im Koerperbild (1.11.1): je Grösse und je Fastenphase ein eigener Farbton statt
+     Abstufungen eines Violetts (Marco, 26.10.2026: „die verschiedenen violett abstufungen sind für
+     das menschliche auge schwerz zu zuordnen“). Mit dem Prüfskript abgenommen: benachbarte Ringe
+     auch bei Farbsehschwäche getrennt; die Werte hält tests/ringfarben.test.js fest. */
+  --ring-kcal:#6a4bab; --ring-protein:#1baf7a; --ring-akt:#2a78d6; --ring-kh:#eda100;
+  --ring-zucker:#e87ba4; --ring-zusatz:#9a4a10;
+  --phase-1:#eda100; --phase-2:#e87ba4; --phase-3:#2a78d6; --phase-4:#eb6834; --phase-5:#1baf7a; --phase-6:#6250d6;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -55,6 +62,9 @@
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.7);
     --focus:#9a7fdc;
     --serie:#9a7fdc; --serie-roh:#6d757f; --gitter:#242931;
+    --ring-kcal:#9a7fdc; --ring-protein:#199e70; --ring-akt:#3987e5; --ring-kh:#c98500;
+    --ring-zucker:#d55181; --ring-zusatz:#a04816;
+    --phase-1:#c98500; --phase-2:#d55181; --phase-3:#3987e5; --phase-4:#d95926; --phase-5:#199e70; --phase-6:#9085e9;
   }
 }
 :root[data-theme="dark"]{
@@ -68,6 +78,9 @@
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.7);
   --focus:#9a7fdc;
   --serie:#9a7fdc; --serie-roh:#6d757f; --gitter:#242931;
+    --ring-kcal:#9a7fdc; --ring-protein:#199e70; --ring-akt:#3987e5; --ring-kh:#c98500;
+    --ring-zucker:#d55181; --ring-zusatz:#a04816;
+    --phase-1:#c98500; --phase-2:#d55181; --phase-3:#3987e5; --phase-4:#d95926; --phase-5:#199e70; --phase-6:#9085e9;
 }
 
 *{box-sizing:border-box}
@@ -496,6 +509,10 @@ body.geraet #serverPanel{display:block}
   .grid{display:contents}
   .stack{gap:12px}
   #tagPanel{order:-1}
+  /* Messwerte: Beschriftung auf einer Zeile, Kurzform („Bauch (cm)“, „Essen ab“) — sonst brach
+     sie um und die Felder standen versetzt (Marco, 26.10.2026) */
+  #tagPanel .row3 .field > label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  label .lang{display:none}
   body[data-tab="tag"] .app [data-tab]:not(button):not([data-tab="tag"]),
   body[data-tab="verlauf"] .app [data-tab]:not(button):not([data-tab="verlauf"]),
   body[data-tab="einst"] .app [data-tab]:not(button):not([data-tab="einst"]){display:none}
@@ -782,7 +799,7 @@ body.geraet #serverPanel{display:block}
       <div class="row3">
         <div class="field"><label for="tGewicht">Gewicht (kg)</label>
           <input type="number" id="tGewicht" step="0.1"></div>
-        <div class="field"><label for="tBauch">Bauchumfang (cm)</label>
+        <div class="field"><label for="tBauch">Bauch<span class="lang">umfang</span> (cm)</label>
           <input type="number" id="tBauch" step="0.5"></div>
         <div class="field"><label for="tSchlaf">Schlaf (h)</label>
           <input type="number" id="tSchlaf" step="0.25"></div>
@@ -790,7 +807,7 @@ body.geraet #serverPanel{display:block}
       <div class="row3">
         <div class="field"><label for="tStress">Stress (1–5)</label>
           <input type="number" id="tStress" min="1" max="5" step="1"></div>
-        <div class="field"><label for="tVon">Essensfenster ab</label>
+        <div class="field"><label for="tVon">Essen<span class="lang">sfenster</span> ab</label>
           <input type="time" id="tVon"></div>
         <div class="field"><label for="tBis">bis</label>
           <input type="time" id="tBis"></div>
@@ -899,7 +916,7 @@ body.geraet #serverPanel{display:block}
             dann steht „≥“ und wie viele Zeilen bekannt sind. Kohlenhydrate aus Alkohol sind dabei,
             beim Zucker nicht; Milch im Kaffee fehlt bei beiden.</p>
           <p class="explain">Im Zucker-Ring ist <b style="color:var(--warn-ink)">bernsteinfarben</b> der
-            Zucker aus Lebensmitteln <b>mit Zuckerzusatz</b>, violett der aus Lebensmitteln ohne, grau
+            Zucker aus Lebensmitteln <b>mit Zuckerzusatz</b>, rosa der aus Lebensmitteln ohne, grau
             der, bei dem es sich nicht sagen lässt. Keine Nährwerttabelle gibt an, wie viel Zucker
             zugesetzt ist — eingeteilt wird deshalb <i>je Lebensmittel</i>: nach der Zutatenliste
             (Open Food Facts, Bäckerei Steiner) oder nach Name und Gruppe (Schweizer
@@ -2125,7 +2142,7 @@ function lmEinheiten(l, stueck){
     leere Liste und einen Merker — die Anwendung laeuft weiter, nur ohne Suche. */
 function naehrwerteLesen(roh, stueck){
   if (!roh || !Array.isArray(roh.felder) || !Array.isArray(roh.lm))
-    return {lm:[], quellen:{}, stand:null, fehlt:true};
+    return {lm:[], quellen:{}, stand:null, lauf:null, fehlt:true};
   const lm = roh.lm.map(z => {
     const l = {};
     roh.felder.forEach((f, i) => { l[f] = z[i] === undefined ? null : z[i]; });
@@ -2134,7 +2151,23 @@ function naehrwerteLesen(roh, stueck){
     l.s = normText(l.n + " " + l.m);
     return l;
   });
-  return {lm, quellen:roh.quellen || {}, stand:roh.stand || null, fehlt:false};
+  return {lm, quellen:roh.quellen || {}, stand:roh.stand || null, lauf:roh.lauf || null, fehlt:false};
+}
+
+/* Stammdaten vom Server (1.11.0). Marco, 26.10.2026: „die app liegt in einem öffentlichen repo,
+   die daten sollen aber nur in der db sein. und nur jemand mit einem gültien token, kann sich die
+   "stammdaten" herunterladen“. Gefragt wird mit der Ladung, die das Geraet schon hat — ist sie
+   noch die gueltige, antwortet der Server nur {aktuell:true} statt mit 3,5 MB. */
+function stammdatenFrage(lauf){
+  return "?stammdaten" + (lauf ? "&lauf=" + encodeURIComponent(lauf) : "");
+}
+/** {art:"neu", daten} | {art:"aktuell"} | {art:"fehler"}. Eine leere Ladung ist ein Fehler:
+    sie leerte die Suche still. */
+function stammdatenPruefen(json, lauf){
+  if (!json || typeof json !== "object") return {art:"fehler"};
+  if (json.aktuell === true) return json.lauf && json.lauf === lauf ? {art:"aktuell"} : {art:"fehler"};
+  if (!Array.isArray(json.felder) || !Array.isArray(json.lm) || !json.lm.length) return {art:"fehler"};
+  return {art:"neu", daten:json};
 }
 
 /** Eigene Produkte, von der Verpackung abgetippt. Im Protokoll gespeichert. */
@@ -2856,16 +2889,21 @@ function stateVorgabe(){
   };
 }
 
-const VERSION = "1.9.0";
+const VERSION = "1.11.1";
 
 let STATE = stateVorgabe();
-/* Naehrwerte aus naehrwerte.js. Die eigenen Produkte liegen im Protokoll und
-   kommen bei jeder Aenderung neu dazu (lmListe). */
-const NW = naehrwerteLesen(window.NAEHRWERTE, CONFIG.stueck);
+/* Naehrwerte: am PC aus naehrwerte.js neben der Datei, in der App ueber die Webadresse vom Server
+   (stammdatenHolen(), seit 1.11.0 — das App-Repo ist oeffentlich, die Daten nicht). Die eigenen
+   Produkte liegen im Protokoll und kommen bei jeder Aenderung neu dazu (lmListe). */
+let NW = naehrwerteLesen(window.NAEHRWERTE, CONFIG.stueck);
 let lmEigene = [];
 function lmListe(){ return NW.lm.concat(lmEigene); }
 function lmEigeneNeu(){ lmEigene = eigeneLesen(STATE.eigeneLm); }
-const NW_ID = new Map(NW.lm.map(l => [l.id, l]));
+let NW_ID = new Map(NW.lm.map(l => [l.id, l]));
+function nwSetzen(roh){
+  NW = naehrwerteLesen(roh, CONFIG.stueck);
+  NW_ID = new Map(NW.lm.map(l => [l.id, l]));
+}
 function lmVon(id){ return lmEigene.find(l => l.id === id) || NW_ID.get(id) || null; }
 let lmGruppe = mahlzeitNachUhrzeit(new Date().getHours() + new Date().getMinutes() / 60);
 let lmQuelle = "Alle";
@@ -3935,24 +3973,31 @@ function pfeil(t, dez, einheit, runterIstGut){
    Runde dreht, liest sich als Erfolg. teile: [{anteil, farbe}] nacheinander auf demselben Ring
    (Zucker mit/ohne Zusatz), ueber 100 % auf den vollen Ring gestaucht. */
 function kreisSvg(ringe, gross, klein){
-  const M = 130, R0 = 122, B = 10, L = 3;     // innerster von sechs: r = 57, Platz fuer die Mitte
+  /* L = Luft zwischen zwei Ringen, LUECKE zwischen zwei Teilen desselben Rings (Zucker): beides
+     gehoert zur Abgrenzung (Marco, 26.10.2026: „mach markantere farben und abgrenzungen“).
+     Innerster von sechs: r = 52, Platz fuer die Mitte. */
+  const M = 130, R0 = 122, B = 10, L = 4, LUECKE = 4;
   let s = '<svg viewBox="0 0 260 260" width="220" height="220" role="img" aria-label="'
         + esc(gross + " " + klein) + '">';
   ringe.forEach((ring, i) => {
     const r = R0 - i * (B + L), u = 2 * Math.PI * r;
-    const bogen = (von, laenge, farbe, deck, rund) => laenge <= 0 ? "" :
+    const bogen = (von, strich, farbe, rund) => strich <= 0 ? "" :
       '<circle cx="' + M + '" cy="' + M + '" r="' + r + '" fill="none" stroke="' + farbe + '"'
-      + (deck !== undefined ? ' stroke-opacity="' + deck.toFixed(2) + '"' : "")
       + ' stroke-width="' + B + '"' + (rund ? ' stroke-linecap="round"' : "")
-      + ' stroke-dasharray="' + (Math.min(1, laenge) * u).toFixed(1) + ' ' + u.toFixed(1) + '"'
+      + ' stroke-dasharray="' + strich.toFixed(1) + ' ' + u.toFixed(1) + '"'
       + ' transform="rotate(' + (-90 + von * 360).toFixed(1) + ' ' + M + ' ' + M + ')"/>';
     s += '<circle cx="' + M + '" cy="' + M + '" r="' + r + '" fill="none" stroke="var(--sunken)" stroke-width="' + B + '"/>';
     if (ring.teile && ring.teile.length){
       const summe = ring.teile.reduce((a, t) => a + t.anteil, 0), mass = summe > 1 ? 1 / summe : 1;
+      const sichtbar = ring.teile.filter(t => t.anteil > 0).length;
       let von = 0;
-      for (const t of ring.teile){ s += bogen(von, t.anteil * mass, t.farbe, undefined, false); von += t.anteil * mass; }
+      for (const t of ring.teile){
+        const laenge = t.anteil * mass * u;
+        s += bogen(von, sichtbar > 1 ? laenge - LUECKE : laenge, t.farbe, false);
+        von += t.anteil * mass;
+      }
     } else {
-      s += bogen(0, ring.anteil, ring.anteil > 1.02 ? "var(--warn-ink)" : ring.farbe, ring.deck, true);
+      s += bogen(0, Math.min(1, ring.anteil) * u, ring.anteil > 1.02 ? "var(--warn-ink)" : ring.farbe, true);
     }
   });
   s += '<text x="' + M + '" y="' + (M - 2) + '" text-anchor="middle" font-size="22" font-weight="700" fill="var(--ink)"'
@@ -3961,30 +4006,30 @@ function kreisSvg(ringe, gross, klein){
   return s + '</svg>';
 }
 /** Eine Zeile der Liste neben den Ringen. */
-function kreisZeile(farbe, deck, name, mitte, rechts, unten, klasse){
+function kreisZeile(farbe, name, mitte, rechts, unten, klasse){
   return '<div class="kreiszeile' + (klasse ? " " + klasse : "") + '"><span class="f" style="background:' + farbe
-    + (deck !== undefined ? ';opacity:' + deck.toFixed(2) : "") + '"></span><span class="n">' + name + '</span>'
+    + '"></span><span class="n">' + name + '</span>'
     + '<span class="m">' + mitte + '</span><span class="w">' + rechts + (unten ? '<small>' + unten + '</small>' : "")
     + '</span></div>';
 }
 function stundenText(h){ const m = Math.round(h * 60); return Math.floor(m / 60) + " h " + String(m % 60).padStart(2, "0"); }
-// Phasen sind geordnet: ein Farbton von hell nach dunkel, im dunklen Modus kraeftig genug
-function fastenDeck(i){ return 0.32 + i * 0.136; }
+/* Jede Groesse ein eigener Farbton, der Punkt in der Liste genau derselbe. Bis 1.11.0 waren es
+   Helligkeiten eines Violetts — Marco, 26.10.2026: „die verschiedenen violett abstufungen sind für
+   das menschliche auge schwerz zu zuordnen“. Die Fastenphasen sind geordnet, ihre Farben folgen
+   trotzdem keinem Verlauf: ein Lauf durch den Farbkreis legte aehnliche Farben nebeneinander. */
 
 /** Die Tagesringe aus tagesRinge(): Ringe fuer alles mit Bezug, Alkohol nur in der Liste. */
 function tagKreisHtml(r, ts){
+  const RING_FARBE = {"Kalorien":"var(--ring-kcal)", "Protein":"var(--ring-protein)", "Aktivität":"var(--ring-akt)",
+                      "Kohlenhydrate":"var(--ring-kh)", "Zucker":"var(--ring-zucker)"};
   const mitRing = r.filter(x => x.art !== "keiner");
-  /* Jeder Ring eine eigene Helligkeit, der Punkt in der Liste genau dieselbe — sonst sieht
-     man nicht, welcher Ring welcher ist (alle in einem Violett waren nicht zu unterscheiden). */
-  const DECK = [1, 0.8, 0.62, 0.46];
-  const deckVon = name => DECK[mitRing.findIndex(x => x.name === name)];
-  const ringe = mitRing.map((x, i) => x.name === "Zucker" && x.teile
-    ? {teile:x.teile.map(t => ({anteil:t.anteil, farbe:t.art === "zusatz" ? "var(--warn-ink)" : t.art === "ohne" ? "var(--serie)" : "var(--serie-roh)"}))}
-    : {anteil:x.anteil, farbe:"var(--serie)", deck:DECK[i]});
+  const ringe = mitRing.map(x => x.name === "Zucker" && x.teile
+    ? {teile:x.teile.map(t => ({anteil:t.anteil, farbe:t.art === "zusatz" ? "var(--ring-zusatz)" : t.art === "ohne" ? "var(--ring-zucker)" : "var(--serie-roh)"}))}
+    : {anteil:x.anteil, farbe:RING_FARBE[x.name] || "var(--serie)"});
   const zahl0 = (v, mind) => v === null ? "—" : (mind ? "≥" : "") + fmt(v, 0);
   const zeilen = r.map(x => {
     if (x.art === "keiner")
-      return kreisZeile("var(--line-2)", undefined, x.name, "kein Ring", x.wert ? fmt(x.wert, 1) + " " + x.einheit : "keiner",
+      return kreisZeile("var(--line-2)", x.name, "kein Ring", x.wert ? fmt(x.wert, 1) + " " + x.einheit : "keiner",
                         "", "ohne");
     const wert = x.name === "Aktivität" ? (x.wert ? fmt(x.wert, 0) + " min" : "Ruhetag") : zahl0(x.wert, x.mindestens) + " " + x.einheit;
     const bezug = x.bezug === null ? "" : (x.art === "ziel" ? "von " : "Bezug ") + fmt(x.bezug, 0) + (x.einheit === "kcal" ? "" : " " + x.einheit);
@@ -3994,7 +4039,7 @@ function tagKreisHtml(r, ts){
         + (ts.zucker.offen ? " · Art unbekannt " + fmt(ts.zucker.offen, 0) + " g" : "") + (unten ? " · " + unten : "");
     const ueber = x.anteil > 1.02;
     // Zucker: der Punkt zeigt den Teil „ohne Zusatz“; die Teile stehen in der Zeile darunter
-    return kreisZeile(ueber ? "var(--warn-ink)" : "var(--serie)", ueber ? undefined : deckVon(x.name), x.name, bezug,
+    return kreisZeile(ueber ? "var(--warn-ink)" : RING_FARBE[x.name] || "var(--serie)", x.name, bezug,
                       (ueber ? '<span style="color:var(--warn-ink)">' : "") + wert + (ueber ? "</span>" : ""), unten);
   }).join("");
   const frei = ts.kcal.frei;
@@ -4008,13 +4053,14 @@ function fastenKreisHtml(stand, e){
   const ringe = fastenRinge(stand.stunden);
   if (!ringe) return '<p class="explain" style="margin:0">Für eine Fastenzeit braucht es das Essensfenster von gestern und heute.</p>';
   const jetzt = ringe.find(x => x.zustand === "jetzt");
-  const zeilen = ringe.map((x, i) => kreisZeile("var(--serie)", fastenDeck(i), esc(x.name)
+  const farbe = i => "var(--phase-" + (i + 1) + ")";
+  const zeilen = ringe.map((x, i) => kreisZeile(farbe(i), esc(x.name)
       + (x.zustand === "jetzt" ? ' <span style="color:var(--accent)">← ' + (stand.laeuft ? "jetzt" : "hier") + '</span>' : ""),
     x.von + "–" + x.bis + " h",
     x.zustand === "erfuellt" ? '<span style="color:var(--ok)">erfüllt ✓</span>'
       : x.zustand === "jetzt" ? (stand.laeuft ? "noch " + stundenText(x.noch) : "bis " + x.bis + " h")
       : stand.laeuft ? "in " + stundenText(x.in) : "", "", x.zustand === "erfuellt" ? "erfuellt" : "")).join("");
-  return '<div class="kreis">' + kreisSvg(ringe.map((x, i) => ({anteil:x.anteil, farbe:"var(--serie)", deck:fastenDeck(i)})),
+  return '<div class="kreis">' + kreisSvg(ringe.map((x, i) => ({anteil:x.anteil, farbe:farbe(i)})),
            stundenText(stand.stunden), jetzt ? jetzt.name : "über 36 h")
     + '<div class="kreisliste">' + zeilen
     + (stand.laeuft && stand.geplant !== null && e ? '<div class="kreiszeile" style="color:var(--ink-3)">Um ' + esc(e.fVon)
@@ -4064,9 +4110,10 @@ function koerperRingeZeichnen(){
 /* ---------------- Fastenfenster ---------------- */
 
 /**
- * Balken 0 bis 30 Stunden mit den Phasen. Die Phasen sind GEORDNET, deshalb
- * ein einziger Farbton von hell nach dunkel und keine bunten Klassen — eine
- * Reihenfolge soll man am Verlauf sehen, nicht an sechs Farben raten muessen.
+ * Balken 0 bis 30 Stunden mit den Phasen. Bis 1.11.0 ein Farbton von hell nach dunkel; seit
+ * 1.11.1 dieselben sechs Farben wie die Fastenringe (Marco, 26.10.2026: „die verschiedenen
+ * violett abstufungen sind für das menschliche auge schwerz zu zuordnen“) — eine Phase hat
+ * ueberall dieselbe Farbe. Die Reihenfolge zeigt die Lage auf der Stundenskala.
  */
 function fastenBalkenSvg(stunden, schnitt){
   const W = 760, H = 62, L = 6, R = 6, oben = 10, hoehe = 24;
@@ -4077,10 +4124,9 @@ function fastenBalkenSvg(stunden, schnitt){
   let von = 0;
   CONFIG.fastenPhasen.forEach((ph, i) => {
     const bis = Math.min(max, ph.bis);
-    const deck = 0.14 + i * 0.15;
     teile.push('<rect x="' + x(von).toFixed(1) + '" y="' + oben + '" width="'
-      + (x(bis) - x(von) - 1.5).toFixed(1) + '" height="' + hoehe
-      + '" rx="2" fill="var(--serie)" fill-opacity="' + deck.toFixed(2) + '"/>');
+      + (x(bis) - x(von) - 2).toFixed(1) + '" height="' + hoehe
+      + '" rx="2" fill="var(--phase-' + (i + 1) + ')"/>');
     if (i < CONFIG.fastenPhasen.length - 1)
       teile.push('<text x="' + x(bis).toFixed(1) + '" y="' + (oben + hoehe + 13)
         + '" text-anchor="middle" font-size="10" fill="var(--ink-3)" '
@@ -4755,6 +4801,7 @@ async function abgleichen(){
       standUebernehmen(JSON.stringify(STATE) === lokalText ? stand : zusammenfuehren(lokal, STATE, stand));
       abgleich.fehler = ""; abgleich.zuletzt = new Date();
       await tagesstandSenden(ziel);
+      await stammdatenHolen(ziel);
       break;
     }
   } catch(err){
@@ -4848,6 +4895,96 @@ async function serverVerbinden(){
   serverZeichnen();
   await abgleichen();
   if (!abgleich.fehler) melden("Verbunden", "Dieses Gerät gleicht jetzt mit dem Server ab, als " + r.json.person + ".");
+}
+
+/* --- Stammdaten (1.11.0): die Naehrwerte kommen in der App vom Server ---
+   Marco, 26.10.2026: „die daten sollen aber nur in der db sein. und nur jemand mit einem gültien
+   token, kann sich die "stammdaten" herunterladen“. Abgelegt werden sie im Geraet (IndexedDB —
+   fuer localStorage sind 3,5 MB zu viel), damit die Suche auch ohne Netz geht. Am PC per file://
+   bleibt es naehrwerte.js; IndexedDB ist dort ohnehin gesperrt (siehe „Speichern“). */
+const NW_DB = "koerper-naehrwerte";
+let stammdatenGeprueft = 0;
+let nwBereit = Promise.resolve();     // die abgelegte Ladung ist gelesen — sonst holte der erste Abgleich alles neu
+
+function nwDb(){
+  return new Promise((ok, fehler) => {
+    const r = indexedDB.open(NW_DB, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("daten");
+    r.onsuccess = () => ok(r.result);
+    r.onerror = () => fehler(r.error);
+  });
+}
+async function nwAusGeraet(){
+  try {
+    const db = await nwDb();
+    return await new Promise(ok => {
+      const r = db.transaction("daten").objectStore("daten").get("nw");
+      r.onsuccess = () => ok(r.result || null);
+      r.onerror = () => ok(null);
+    });
+  } catch(e){ return null; }
+}
+async function nwInsGeraet(roh){
+  try {
+    const db = await nwDb();
+    await new Promise((ok, fehler) => {
+      const t = db.transaction("daten", "readwrite");
+      t.objectStore("daten").put(roh, "nw");
+      t.oncomplete = ok; t.onerror = () => fehler(t.error);
+    });
+    return true;
+  } catch(e){ return false; }
+}
+/** Neue Naehrwerte anzeigen: Suche, Quellen, und die Tagessummen (sie schlagen nach). */
+function nwAnzeigen(roh){
+  nwSetzen(roh);
+  lmStandZeigen(); lmChipsZeichnen();
+  tagEditorZeichnen(); neu();
+}
+/* Holt die Stammdaten, wenn das Geraet keine hat oder die letzte Pruefung ueber eine Stunde her
+   ist. Ein Fehler stoert den Abgleich nicht — dann bleibt die abgelegte Ladung. */
+async function stammdatenHolen(ziel){
+  if (!GERAET || !ziel || window.NAEHRWERTE) return;
+  await nwBereit;
+  if (!NW.fehlt && Date.now() - stammdatenGeprueft < 3600e3) return;
+  try {
+    const r = await serverRuf(ziel, "GET", null, stammdatenFrage(NW.lauf));
+    if (r.status !== 200) return;
+    stammdatenGeprueft = Date.now();
+    const p = stammdatenPruefen(r.json, NW.lauf);
+    if (p.art !== "neu" || ziel !== serverZiel) return;
+    await nwInsGeraet(p.daten);
+    nwAnzeigen(p.daten);
+  } catch(e){}
+}
+
+function lmStandZeigen(){
+  const lmFeld = $("lmEingabe");
+  if (!lmFeld.dataset.platzhalter) lmFeld.dataset.platzhalter = lmFeld.placeholder;
+  lmFeld.disabled = NW.fehlt;
+  $("lmMehr").disabled = NW.fehlt;
+  if (NW.fehlt && GERAET){
+    lmFeld.placeholder = "Suche aus — die Nährwerte kommen vom Server";
+    $("lmStand").textContent = serverZiel
+      ? "Die Nährwerte werden vom Server geholt, sobald er erreichbar ist. Freie Zeilen gehen weiterhin."
+      : "Die Nährwerte liegen auf dem Server und kommen nur mit einem Token: Einstellungen → Server → "
+        + "Verbinden. Freie Zeilen gehen weiterhin.";
+  } else if (NW.fehlt){
+    lmFeld.placeholder = "Suche aus — die Nährwertdatei naehrwerte.js fehlt";
+    $("lmStand").innerHTML = 'Die Nährwertdatei <b>naehrwerte.js</b> liegt nicht neben der Anwendung — '
+      + 'erzeugen mit <span class="mono">werkzeuge/naehrwerte_holen.py</span>. Freie Zeilen gehen weiterhin.';
+  } else {
+    lmFeld.placeholder = lmFeld.dataset.platzhalter;
+    const q = NW.quellen, n = k => q[k] ? fmt(q[k].n, 0) : "0";
+    $("lmStand").textContent = "Nährwerte: " + n("BLV") + " Lebensmittel aus der Schweizer Nährwertdatenbank"
+      + (q.BLV && q.BLV.stand ? " (" + q.BLV.stand + ")" : "") + ", " + n("Migros") + " Migros- und "
+      + n("Coop") + " Coop-Produkte aus Open Food Facts (Stand " + (NW.stand || "—")
+      + ", von Freiwilligen erfasst, nur vollständige)"
+      + (q.Steiner ? ", " + n("Steiner") + " Produkte der Bäckerei Steiner aus ihrem Onlineshop (ohne Zuckerangabe)" : "")
+      + (q.Rezept ? ", " + n("Rezept") + " Rezepte aus PDFs (je Portion wie gedruckt)" : "")
+      + (window.NAEHRWERTE ? "" : " — vom Server, auf diesem Gerät abgelegt")
+      + ".";
+  }
 }
 
 async function serverTrennen(){
@@ -5305,21 +5442,7 @@ function start(){
   lmFeld.onkeydown = lmEingabeTaste;
   lmFeld.onfocus = () => { if (lmFeld.value.trim()) lmVorschlagZeichnen(); };
   lmFeld.onblur = () => setTimeout(() => { $("lmVorschlag").hidden = true; }, 150);
-  if (NW.fehlt){
-    lmFeld.disabled = true;
-    lmFeld.placeholder = "Suche aus — die Nährwertdatei naehrwerte.js fehlt";
-    $("lmMehr").disabled = true;
-    $("lmStand").innerHTML = 'Die Nährwertdatei <b>naehrwerte.js</b> liegt nicht neben der Anwendung — '
-      + 'erzeugen mit <span class="mono">werkzeuge/naehrwerte_holen.py</span>. Freie Zeilen gehen weiterhin.';
-  } else {
-    const q = NW.quellen, n = k => q[k] ? fmt(q[k].n, 0) : "0";
-    $("lmStand").textContent = "Nährwerte: " + n("BLV") + " Lebensmittel aus der Schweizer Nährwertdatenbank"
-      + (q.BLV && q.BLV.stand ? " (" + q.BLV.stand + ")" : "") + ", " + n("Migros") + " Migros- und "
-      + n("Coop") + " Coop-Produkte aus Open Food Facts (Stand " + (NW.stand || "—")
-      + ", von Freiwilligen erfasst, nur vollständige)"
-      + (q.Steiner ? ", " + n("Steiner") + " Produkte der Bäckerei Steiner aus ihrem Onlineshop (ohne Zuckerangabe)" : "")
-      + ".";
-  }
+  lmStandZeigen();
   $("versionAnz").textContent = "Version " + VERSION;
   $("alkPlus").onclick  = () => {
     const a = CONFIG.getraenke[0];
@@ -5415,6 +5538,8 @@ function start(){
       if (s && s.url && s.token) serverZiel = s;
       basisStand = JSON.parse(localStorage.getItem(BASIS_KEY) || "null");
     } catch(e){}
+    // Naehrwerte: zuerst die abgelegte Ladung (geht ohne Netz); der Abgleich fragt danach den Server
+    if (!window.NAEHRWERTE) nwBereit = nwAusGeraet().then(roh => { if (roh && NW.fehlt) nwAnzeigen(roh); else lmStandZeigen(); });
     window.addEventListener("online", () => abgleichen());
     // Auch ohne eigene Aenderung: was das andere Geraet eintraegt, soll hier erscheinen
     setInterval(() => { if (document.visibilityState === "visible") abgleichen(); }, 60000);

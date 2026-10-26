@@ -3,11 +3,13 @@
    der Dateien. Aendert sich eine Datei, aendert sich damit auch sw.js, der
    Browser installiert den neuen Worker und holt alles neu — sonst behielte das
    Handy die alte Fassung. Die Daten des Protokolls liegen NICHT hier, sondern
-   im Speicher der Seite; ein neuer Stand loescht sie nicht. */
+   im Speicher der Seite; ein neuer Stand loescht sie nicht.
+   Die Naehrwertdatei gehoert seit 1.11.0 nicht mehr dazu: die Naehrwerte kommen mit dem Token
+   vom Server und liegen in der IndexedDB der Seite (das App-Repo ist oeffentlich). */
 "use strict";
-const STAND = "1.9.0-d6e0a90fe488";
+const STAND = "1.11.1-2a6f69574417";
 const CACHE = "koerper-protokoll-" + STAND;
-const DATEIEN = ["./", "index.html", "naehrwerte.js", "manifest.webmanifest", "app-192.png", "app-512.png"];
+const DATEIEN = ["./", "index.html", "manifest.webmanifest", "app-192.png", "app-512.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(DATEIEN)).then(() => self.skipWaiting()));
