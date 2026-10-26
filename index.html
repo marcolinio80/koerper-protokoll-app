@@ -2218,7 +2218,10 @@ function lmSuchen(liste, text, opt){
     // kennzeichnet die Quelle (Marco: „bezeichne es als steiner“), er ist kein Namensteil
     const vorsatz = normText(b.l.q) + " ";
     const kern = b.l.s.indexOf(vorsatz) === 0 ? b.l.s.slice(vorsatz.length) : b.l.s;
-    const kernName = normText(b.l.n).indexOf(vorsatz) === 0 ? normText(b.l.n).slice(vorsatz.length) : normText(b.l.n);
+    // Ebenso das Buch hinter einem Rezept: „Rührei (Breakfast Cookbook)“ heisst „Rührei“
+    // (Marco: „kannst du die auch mit dem jeweiligen buch markieren?“)
+    const nameOhne = b.l.q === "Rezept" ? b.l.n.replace(/\s*\([^()]*\)$/, "") : b.l.n;
+    const kernName = normText(nameOhne).indexOf(vorsatz) === 0 ? normText(nameOhne).slice(vorsatz.length) : normText(nameOhne);
     let p = b.n * 100;
     if (kern.indexOf(w[0]) === 0) p += 30;
     if (s.indexOf(" " + w[0] + " ") >= 0) p += 35;
@@ -2235,6 +2238,9 @@ function lmSuchen(liste, text, opt){
     // ist ein Gipfeli zu 45 g, nicht die Migros-Packung zu 240 g; 26.10.2026).
     const stk = opt.stueck ? lmStueckEinheit(b.l) : null;
     if (stk) p += stk === "Packung" ? 50 : 65;
+    // Ebenso jede andere genannte Einheit: „1 Portion Butter chicken“ will einen Eintrag, der eine
+    // Portion kennt, nicht die Migros-Packung mit „Portion passt nicht“ (Marco, 26.10.2026)
+    if (opt.einh && lmEinheitStandard(b.l, opt.einh) === null) p -= 80;
     if (zuletzt.indexOf(b.l.id) >= 0) p += 40;
     b.p = p - b.l.n.length / 6;
   }
@@ -2287,7 +2293,7 @@ function lmStueckEinheit(l){
 
 /** Eine Zahl ohne Einheit („1 Apfel“) fragt nach Stuecken: die Suche zieht
     dann Eintraege mit Stueckgewicht vor. */
-function lmSuchOptionen(z){ return {stueck:z.menge !== null && !z.einh}; }
+function lmSuchOptionen(z){ return {stueck:z.menge !== null && !z.einh, einh:z.einh || null}; }
 
 /** Aus der zerlegten Eingabe die fertige Zeile, oder null. Eine Zahl ohne
     Einheit bei einem Lebensmittel ohne Stueckgewicht ergibt KEINE Zahl —
@@ -2889,7 +2895,7 @@ function stateVorgabe(){
   };
 }
 
-const VERSION = "1.11.1";
+const VERSION = "1.11.3";
 
 let STATE = stateVorgabe();
 /* Naehrwerte: am PC aus naehrwerte.js neben der Datei, in der App ueber die Webadresse vom Server
