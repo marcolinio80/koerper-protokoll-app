@@ -636,6 +636,18 @@ body.geraet #serverPanel{display:block}
             <label for="schlafZiel">Schlafziel (Stunden)</label>
             <input type="number" id="schlafZiel" min="5" max="10" step="0.5">
           </div>
+          <div class="sep"></div>
+          <div class="field">
+            <label for="khAnteil">Kohlenhydrate, Anteil am Kalorienziel</label>
+            <div class="slider">
+              <input type="range" id="khAnteil" min="10" max="65" step="5">
+              <output id="khAnteilOut"></output>
+            </div>
+          </div>
+          <div class="field">
+            <label for="zuckerZiel">Zucker, Bezugsgrösse (g je Tag)</label>
+            <input type="number" id="zuckerZiel" min="5" max="200" step="5">
+          </div>
         </div>
       </section>
 
@@ -861,6 +873,20 @@ body.geraet #serverPanel{display:block}
         <div>
           <div class="feldlabel" style="margin-bottom:8px">Gewählter Tag</div>
           <div class="ringe" id="ringe"></div>
+          <p class="explain" style="margin-top:10px"><b>Kohlenhydrate</b> und <b>Zucker</b> beziehen sich
+            auf Bezugsgrössen, nicht auf Empfehlungen: ein Anteil am Kalorienziel und 50 g, beides unter
+            „Zielwerte“ einstellbar. Die 50 g sind an die WHO angelehnt (freier Zucker unter 10 % der
+            Energie). Die Tabellen zählen aber <i>allen</i> Zucker, auch den aus Früchten und Milch —
+            der Ring ist darum eher früher voll. Zeilen ohne Nährwerte („Restaurant“) zählen nicht mit;
+            dann steht „≥“ und wie viele Zeilen bekannt sind. Kohlenhydrate aus Alkohol sind dabei,
+            beim Zucker nicht; Milch im Kaffee fehlt bei beiden.</p>
+          <p class="explain">Im Zucker-Ring ist <b style="color:var(--warn-ink)">bernsteinfarben</b> der
+            Zucker aus Lebensmitteln <b>mit Zuckerzusatz</b>, violett der aus Lebensmitteln ohne, grau
+            der, bei dem es sich nicht sagen lässt. Keine Nährwerttabelle gibt an, wie viel Zucker
+            zugesetzt ist — eingeteilt wird deshalb <i>je Lebensmittel</i>: nach der Zutatenliste
+            (Open Food Facts, Bäckerei Steiner) oder nach Name und Gruppe (Schweizer
+            Nährwertdatenbank: Früchte und Gemüse ohne, Süssigkeiten mit). Ein Fruchtjoghurt mit
+            Zucker zählt darum ganz zu „mit Zusatz“, obwohl ein Teil Milch- und Fruchtzucker ist.</p>
         </div>
       </div>
     </div>
@@ -1019,9 +1045,17 @@ body.geraet #serverPanel{display:block}
     <div class="row3">
       <div class="field"><label for="eigFett">Fett je 100 g</label><input type="number" id="eigFett" step="0.1"></div>
       <div class="field"><label for="eigKh">Kohlenhydrate je 100 g</label><input type="number" id="eigKh" step="0.1"></div>
-      <div></div>
+      <div class="field"><label for="eigZucker">davon Zucker je 100 g</label><input type="number" id="eigZucker" step="0.1"></div>
     </div>
-    <p class="explain">Fett und Kohlenhydrate sind freiwillig. Das Produkt steht danach in der
+    <div class="field">
+      <label for="eigZz">Zucker in der Zutatenliste?</label>
+      <select id="eigZz">
+        <option value="">weiss nicht</option>
+        <option value="1">ja — Zucker, Sirup, Honig, Dextrose …</option>
+        <option value="0">nein</option>
+      </select>
+    </div>
+    <p class="explain">Fett, Kohlenhydrate und Zucker sind freiwillig. Das Produkt steht danach in der
       Suche unter „Eigen“ und wird mit dem Protokoll gespeichert.</p>
     <p class="explain" id="eigFehler" style="color:var(--bad-ink)" hidden></p>
     <div class="dlgfoot">
@@ -1455,6 +1489,7 @@ function getraenkWerte(zeile){
     glas: Math.round(ethanol / CONFIG.gAlkProEinheit * 100) / 100,
     kcal: Math.round(ethanol * CONFIG.kcalProGAlkohol
                    + ml / 100 * art.kh * CONFIG.kcalProGKohlenhydrat),
+    kh: Math.round(ml / 100 * art.kh * 10) / 10,
   };
 }
 
@@ -1482,6 +1517,63 @@ function tagKcal(e){
   return (a === null && b === null && c === null) ? null : (a || 0) + (b || 0) + (c || 0);
 }
 function tagProtein(e){ return zeilenSumme(mahlzeiten(e), z => zahl(z.protein)); }
+
+/** Kohlenhydrate ("kh") oder Zucker ("zucker") eines Tages in g:
+    {g, bekannt, zeilen}. Gezaehlt wird jede Essenszeile mit kcal. Traegt eine
+    Zeile den Wert nicht, wird er ueber Lebensmittel und Menge nachgeschlagen
+    (nachschlagen(id) → Lebensmittel) — Zeilen vor 1.6.0 haben ihn nicht, sind
+    aber nicht ohne. Freie Zeilen („Restaurant“) bleiben unbekannt: dann ist
+    bekannt < zeilen und die Anzeige sagt das, statt eine zu kleine Zahl als
+    vollstaendig auszugeben. Kohlenhydrate aus Alkohol zaehlen mit (sie stecken
+    schon in den kcal), beim Zucker nicht: beim Bier ist das kaum Zucker, beim
+    Likoer fast nur. g ist null, wenn nichts bekannt ist. */
+function tagNaehrstoff(e, schluessel, nachschlagen){
+  let g = 0, bekannt = 0, zeilen = 0, getraenk = 0;
+  for (const z of mahlzeiten(e)){
+    if (zahl(z.kcal) === null) continue;            // ungeklaerte Zeile („apfel“ ohne Zahl)
+    zeilen++;
+    let v = zahl(z[schluessel]);
+    if (v === null && z.lm && zahl(z.basis) !== null && nachschlagen){
+      const l = nachschlagen(z.lm);
+      const je100 = !l ? null : schluessel === "kh" ? zahl(l.kh) : zahl(l.x && l.x[schluessel]);
+      if (je100 !== null) v = zahl(z.basis) * je100 / 100;
+    }
+    if (v !== null){ g += v; bekannt++; }
+  }
+  if (schluessel === "kh"){
+    for (const gz of getraenke(e)){ const w = getraenkWerte(gz); if (w && w.kh) getraenk += w.kh; }
+  }
+  return {g:bekannt || getraenk ? runde(g + getraenk, 1) : null, bekannt:bekannt, zeilen:zeilen};
+}
+/** Zucker eines Tages nach Art in g: {zusatz, ohne, offen}. Keine Quelle sagt,
+    wie viel Zucker zugesetzt ist (Marco, 26.10.2026: „unterscheide … zwischen
+    raffineriertem zucker und fruchtzucker“) — eingeteilt wird je Lebensmittel:
+    der ganze Zucker eines Lebensmittels mit Zuckerzusatz zaehlt zu „zusatz“,
+    auch wenn ein Teil davon Frucht- oder Milchzucker ist. Gezaehlt wird nur
+    Zucker, dessen Menge bekannt ist; die Summe ist tagNaehrstoff(e, "zucker").g. */
+function tagZuckerArt(e, nachschlagen){
+  const r = {zusatz:0, ohne:0, offen:0};
+  for (const z of mahlzeiten(e)){
+    if (zahl(z.kcal) === null) continue;
+    const l = z.lm && nachschlagen ? nachschlagen(z.lm) : null;
+    let g = zahl(z.zucker);
+    if (g === null && l && zahl(z.basis) !== null && zahl(l.x && l.x.zucker) !== null)
+      g = zahl(z.basis) * l.x.zucker / 100;
+    if (g === null) continue;
+    let art = z.zz === 0 || z.zz === 1 ? z.zz : null;
+    if (art === null && l && l.x && (l.x.zuckerzusatz === 0 || l.x.zuckerzusatz === 1)) art = l.x.zuckerzusatz;
+    r[art === 1 ? "zusatz" : art === 0 ? "ohne" : "offen"] += g;
+  }
+  return {zusatz:runde(r.zusatz, 1), ohne:runde(r.ohne, 1), offen:runde(r.offen, 1)};
+}
+/** Die Quellen zur Auswahl in der Suche: so viele, wie die Naehrwertdatei hat. */
+function lmQuellen(nw){
+  return ["Alle"].concat(Object.keys((nw && nw.quellen) || {})).concat(["Eigen"]);
+}
+/** Bezugsgroesse Kohlenhydrate: ein Anteil (%) am Kalorienziel, in g. */
+function zielKohlenhydrate(kcalZiel, anteil){
+  return kcalZiel && anteil ? Math.round(kcalZiel * anteil / 100 / CONFIG.kcalProGKohlenhydrat) : null;
+}
 
 function koffWerte(zeile){
   const art = CONFIG.koffein.find(x => x.id === (zeile && zeile.art));
@@ -1894,7 +1986,11 @@ function eigeneLesen(liste){
   return (Array.isArray(liste) ? liste : []).map(x => {
     const l = {id:x.id, n:x.n || "", m:"", q:"Eigen", e:x.e || "g",
                kcal:zahl(x.kcal), p:zahl(x.p) || 0, f:zahl(x.f), kh:zahl(x.kh),
-               d:null, pack:null, port:null, stk:zahl(x.stk)};
+               d:null, pack:null, port:null, stk:zahl(x.stk), x:null};
+    const zusatz = {};
+    if (zahl(x.z) !== null) zusatz.zucker = zahl(x.z);
+    if (x.zz === 0 || x.zz === 1) zusatz.zuckerzusatz = x.zz;
+    if (Object.keys(zusatz).length) l.x = zusatz;
     l.einh = lmEinheiten(l, []);
     l.s = normText(l.n);
     return l;
@@ -1929,8 +2025,13 @@ function lmSuchen(liste, text, opt){
   const ganz = w.join(" ");
   for (const b of treffer){
     const s = " " + b.l.s + " ";
+    // „Steiner Buttergipfel“ heisst fuer den Vergleich „Buttergipfel“: der Vorsatz
+    // kennzeichnet die Quelle (Marco: „bezeichne es als steiner“), er ist kein Namensteil
+    const vorsatz = normText(b.l.q) + " ";
+    const kern = b.l.s.indexOf(vorsatz) === 0 ? b.l.s.slice(vorsatz.length) : b.l.s;
+    const kernName = normText(b.l.n).indexOf(vorsatz) === 0 ? normText(b.l.n).slice(vorsatz.length) : normText(b.l.n);
     let p = b.n * 100;
-    if (b.l.s.indexOf(w[0]) === 0) p += 30;
+    if (kern.indexOf(w[0]) === 0) p += 30;
     if (s.indexOf(" " + w[0] + " ") >= 0) p += 35;
     if (s.indexOf(" roh ") >= 0) p += 8;
     // Ein allgemeines Wort meint ein allgemeines Lebensmittel: „Ei“ ist das
@@ -1939,9 +2040,12 @@ function lmSuchen(liste, text, opt){
     if (b.l.q === "BLV") p += 30;
     // Heisst ein Produkt genau so wie die Eingabe, kommt es nahe heran —
     // bewusst knapp unter das BLV („Apfel“ vor Migros „Aepfel“).
-    if (normText(b.l.n) === ganz) p += 25;
-    // „1 Apfel“ fragt nach einem Stueck: Eintraege mit Stueckgewicht vor.
-    if (opt.stueck && lmStueckEinheit(b.l)) p += 50;
+    if (kernName === ganz) p += 25;
+    // „1 Apfel“ fragt nach einem Stueck: Eintraege mit Stueckgewicht vor — ein
+    // echtes Stueck vor einer Packung, die nur als Stueck gilt („1 Buttergipfel“
+    // ist ein Gipfeli zu 45 g, nicht die Migros-Packung zu 240 g; 26.10.2026).
+    const stk = opt.stueck ? lmStueckEinheit(b.l) : null;
+    if (stk) p += stk === "Packung" ? 50 : 65;
     if (zuletzt.indexOf(b.l.id) >= 0) p += 40;
     b.p = p - b.l.n.length / 6;
   }
@@ -2012,7 +2116,12 @@ function runde(x, dez){ const f = Math.pow(10, dez); return Math.round((x + Numb
 function lmZeile(l, menge, einh, gruppe){
   const b = lmBasis(l, menge, einh);
   if (b === null || zahl(l.kcal) === null) return null;
+  // Kohlenhydrate und Zucker gehen mit in den Tag (1.6.0); fehlt der Wert, bleibt null — nicht 0
+  const je = v => v === null ? null : runde(b * v / 100, 1);
   return {t:l.n, kcal:Math.round(b * l.kcal / 100), protein:runde(b * (zahl(l.p) || 0) / 100, 1),
+          kh:je(zahl(l.kh)), zucker:je(zahl(l.x && l.x.zucker)),
+          // Zuckerzusatz laut Zutaten/Kategorie: 1 mit, 0 ohne, null unbekannt — siehe tagZuckerArt()
+          zz:l.x && (l.x.zuckerzusatz === 0 || l.x.zuckerzusatz === 1) ? l.x.zuckerzusatz : null,
           lm:l.id, q:l.q, menge:zahl(menge), einh, basis:runde(b, 1), gr:gruppe || ""};
 }
 
@@ -2567,7 +2676,8 @@ function stateVorgabe(){
   return {
     meta:{name:"", erstellt:"", geaendert:"", geaendertUm:""},   // geaendertUm: siehe standVergleich()
     person:{geschlecht:"m", alter:40, groesse:178, aktivitaet:"leicht"},
-    ziel:{defizit:400, proKg:1.8, schlaf:7.5},
+    // khAnteil: % des Kalorienziels, zucker: g — beides Bezugsgroessen fuer die Ringe, keine Empfehlung
+    ziel:{defizit:400, proKg:1.8, schlaf:7.5, khAnteil:45, zucker:50},
     aktArten: aktArtenVorgabe(),
     eigeneLm:[],               // eigene Produkte, von der Verpackung abgetippt
     cortanaCids:[],            // jede je aus Cortana uebernommene Zeile, siehe cortanaPruefen()
@@ -2576,7 +2686,7 @@ function stateVorgabe(){
   };
 }
 
-const VERSION = "1.5.1";
+const VERSION = "1.6.0";
 
 let STATE = stateVorgabe();
 /* Naehrwerte aus naehrwerte.js. Die eigenen Produkte liegen im Protokoll und
@@ -3151,7 +3261,7 @@ function lmChipsZeichnen(){
   const anz = q => q === "Alle" ? NW.lm.length + lmEigene.length
     : q === "Eigen" ? lmEigene.length : NW.lm.filter(l => l.q === q).length;
   const qh = $("lmQuelle");
-  qh.innerHTML = NW.fehlt ? "" : '<span class="lbl">Suchen in</span>' + ["Alle", "BLV", "Migros", "Coop", "Eigen"].map(q =>
+  qh.innerHTML = NW.fehlt ? "" : '<span class="lbl">Suchen in</span>' + lmQuellen(NW).map(q =>
     '<button type="button" data-q="' + q + '"' + (q === lmQuelle ? ' class="on"' : '') + '>' + q
     + ' <span class="kc">' + fmt(anz(q), 0) + '</span></button>').join("");
   qh.querySelectorAll("button").forEach(b => {
@@ -3326,7 +3436,7 @@ function mehrOeffnen(){
 function eigenOeffnen(name){
   const dlg = $("dlgEigen");
   $("eigName").value = name || "";
-  for (const id of ["eigKcal", "eigProt", "eigStk", "eigFett", "eigKh"]) $(id).value = "";
+  for (const id of ["eigKcal", "eigProt", "eigStk", "eigFett", "eigKh", "eigZucker", "eigZz"]) $(id).value = "";
   $("eigFehler").hidden = true;
   $("lmVorschlag").hidden = true;
   const fehler = t => { $("eigFehler").textContent = t; $("eigFehler").hidden = false; };
@@ -3335,8 +3445,11 @@ function eigenOeffnen(name){
     const n = $("eigName").value.trim(), k = zahl($("eigKcal").value), p = zahl($("eigProt").value);
     if (!n || k === null || p === null){ fehler("Bezeichnung, kcal und Protein je 100 g braucht es."); return; }
     if (k < 0 || k > 900){ fehler("kcal je 100 g liegen zwischen 0 und 900 \u2014 ist es vielleicht kJ?"); return; }
+    const kh = zahl($("eigKh").value), zu = zahl($("eigZucker").value);
+    if (zu !== null && (zu < 0 || (kh !== null && zu > kh))){ fehler("Zucker ist ein Teil der Kohlenhydrate \u2014 h\u00f6chstens so viel wie diese."); return; }
     STATE.eigeneLm.push({id:"e" + Date.now().toString(36), n, e:"g", kcal:k, p,
-      f:zahl($("eigFett").value), kh:zahl($("eigKh").value), stk:zahl($("eigStk").value)});
+      f:zahl($("eigFett").value), kh:kh, z:zu, zz:$("eigZz").value === "" ? null : +$("eigZz").value,
+      stk:zahl($("eigStk").value)});
     lmEigeneNeu();
     dlg.close();
     lmChipsZeichnen();
@@ -3645,15 +3758,30 @@ function pfeil(t, dez, einheit, runterIstGut){
 }
 
 /** Ring fuer „erreicht von Ziel“. Ueber 100 % laeuft er nicht weiter — er faerbt um. */
-function ringSvg(anteil, beschriftung, mitte, unten){
+/* teile (wahlweise): [{anteil, farbe}] nacheinander auf dem Ring, z. B. Zucker mit
+   und ohne Zusatz. Ueber 100 % wird auf den vollen Ring gestaucht; dass es mehr
+   ist, steht dann im Text — ein Ring, der eine zweite Runde dreht, liest sich als Erfolg. */
+function ringSvg(anteil, beschriftung, mitte, unten, teile){
   const r = 26, u = 2 * Math.PI * r;
   const voll = Math.max(0, Math.min(1, anteil));
   const farbe = anteil > 1.02 ? "var(--warn-ink)" : "var(--serie)";
+  const bogen = (von, laenge, f) => '<circle cx="32" cy="32" r="' + r + '" fill="none" stroke="' + f + '" stroke-width="7"'
+    + ' stroke-dasharray="' + (laenge * u).toFixed(1) + ' ' + u.toFixed(1) + '"'
+    + ' transform="rotate(' + (-90 + von * 360).toFixed(1) + ' 32 32)"/>';
+  let ringe;
+  if (teile && teile.length){
+    const summe = teile.reduce((s, t) => s + t.anteil, 0);
+    const mass = summe > 1 ? 1 / summe : 1;
+    let von = 0;
+    ringe = teile.filter(t => t.anteil > 0).map(t => { const b = bogen(von, t.anteil * mass, t.farbe); von += t.anteil * mass; return b; }).join("");
+  } else {
+    ringe = '<circle cx="32" cy="32" r="' + r + '" fill="none" stroke="' + farbe + '" stroke-width="7"'
+      + ' stroke-linecap="round" stroke-dasharray="' + (voll * u).toFixed(1) + ' ' + u.toFixed(1) + '"'
+      + ' transform="rotate(-90 32 32)"/>';
+  }
   return '<div class="ring"><svg viewBox="0 0 64 64" width="64" height="64">'
     + '<circle cx="32" cy="32" r="' + r + '" fill="none" stroke="var(--sunken)" stroke-width="7"/>'
-    + '<circle cx="32" cy="32" r="' + r + '" fill="none" stroke="' + farbe + '" stroke-width="7"'
-    + ' stroke-linecap="round" stroke-dasharray="' + (voll * u).toFixed(1) + ' ' + u.toFixed(1) + '"'
-    + ' transform="rotate(-90 32 32)"/>'
+    + ringe
     + '<text x="32" y="36" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">'
     + esc(mitte) + '</text></svg>'
     + '<div class="n"><b>' + esc(beschriftung) + '</b>' + unten + '</div></div>';
@@ -3702,6 +3830,32 @@ function koerperZeichnen(){
   ringe.push(ringSvg(tm ? tm/60 : 0, "Aktivit\u00e4t", tm ? fmt(tm, 0) : "\u2014",
     tm ? "Minuten" : "Ruhetag"));
   ringe.push(ringSvg(0, "Alkohol", al ? fmt(al, 1) : "\u2014", al ? "Gl\u00e4ser" : "keiner"));
+  /* Kohlenhydrate und Zucker (1.6.0). Fehlt bei einer Zeile der Wert (freie
+     Zeile), steht \u201e\u2265\u201c und wie viele Zeilen bekannt sind \u2014 eine zu kleine Zahl
+     soll nicht vollstaendig aussehen. */
+  const naehr = (r, bezug, titel) => {
+    const teil = r.bekannt < r.zeilen;
+    ringe.push(ringSvg(r.g !== null && bezug ? r.g/bezug : 0, titel,
+      r.g === null ? "\u2014" : (teil ? "\u2265" : "") + fmt(r.g, 0),
+      r.g === null ? (r.zeilen ? "nicht bekannt" : "nichts erfasst")
+        : (bezug ? "von " + fmt(bezug, 0) + " g" : "g")
+          + (teil ? '<br><span style="color:var(--warn-ink)">' + r.bekannt + " von " + r.zeilen + " Zeilen</span>" : "")));
+  };
+  naehr(tagNaehrstoff(e, "kh", lmVon), zielKohlenhydrate(zk, STATE.ziel.khAnteil), "Kohlenhydrate");
+  /* Zucker in drei Teilen: aus Lebensmitteln mit Zuckerzusatz (Bernstein = Hinweis),
+     ohne (Serienfarbe), Art unbekannt (grau). Eingeteilt je Lebensmittel, siehe tagZuckerArt(). */
+  const zu = tagNaehrstoff(e, "zucker", lmVon), za = tagZuckerArt(e, lmVon), bz = STATE.ziel.zucker;
+  const zuTeil = zu.bekannt < zu.zeilen;
+  ringe.push(ringSvg(0, "Zucker",
+    zu.g === null ? "—" : (zuTeil ? "≥" : "") + fmt(zu.g, 0),
+    zu.g === null ? (zu.zeilen ? "nicht bekannt" : "nichts erfasst")
+      : "von " + fmt(bz, 0) + " g"
+        + '<br><span style="color:var(--warn-ink)">mit Zusatz ' + fmt(za.zusatz, 0) + " g</span>"
+        + (za.offen >= 0.5 ? '<br><span style="color:var(--ink-3)">Art unbekannt ' + fmt(za.offen, 0) + " g</span>" : "")
+        + (zuTeil ? '<br><span style="color:var(--warn-ink)">' + zu.bekannt + " von " + zu.zeilen + " Zeilen</span>" : ""),
+    zu.g === null || !bz ? [] : [{anteil:za.zusatz / bz, farbe:"var(--warn-ink)"},
+                                 {anteil:za.ohne / bz, farbe:"var(--serie)"},
+                                 {anteil:za.offen / bz, farbe:"var(--serie-roh)"}]));
   $("ringe").innerHTML = ringe.join("");
 }
 
@@ -4804,7 +4958,7 @@ function ergaenzen(s){
   erg.aktArten = eintraegeErgaenzen(erg.aktArten, aktArtenVorgabe(),
     {name:"", kcalProMinKg:0, minVorgabe:0, kmh:0, distEinheit:"km", distVorgabe:0, hmFaktor:0});
   erg.eigeneLm = eintraegeErgaenzen(erg.eigeneLm, [],
-    {n:"", e:"g", kcal:0, p:0, f:null, kh:null, stk:null});
+    {n:"", e:"g", kcal:0, p:0, f:null, kh:null, z:null, zz:null, stk:null});
   delete erg.liste;          // wird nicht mehr gebraucht
   return erg;
 }
@@ -4820,6 +4974,9 @@ function alleFelderSetzen(){
   $("proKg").value = STATE.ziel.proKg;
   $("proKgOut").textContent = STATE.ziel.proKg.toFixed(1) + " g/kg";
   $("schlafZiel").value = STATE.ziel.schlaf;
+  $("khAnteil").value = STATE.ziel.khAnteil;
+  $("khAnteilOut").textContent = STATE.ziel.khAnteil + " %";
+  $("zuckerZiel").value = STATE.ziel.zucker;
   hinweiseSetzen();
   filterZeichnen();
   listeZeichnen();
@@ -4864,6 +5021,12 @@ function start(){
   bind("groesse", "person.groesse", v => Math.max(120, Math.min(230, parseFloat(v) || 175)));
   bind("aktivitaet", "person.aktivitaet");
   bind("schlafZiel", "ziel.schlaf", v => Math.max(5, Math.min(10, parseFloat(v) || 7.5)));
+  bind("zuckerZiel", "ziel.zucker", v => Math.max(5, Math.min(200, parseFloat(v) || 50)));
+  $("khAnteil").oninput = e => {
+    STATE.ziel.khAnteil = parseInt(e.target.value, 10);
+    $("khAnteilOut").textContent = STATE.ziel.khAnteil + " %";
+    neu();
+  };
 
   $("defizit").oninput = e => {
     STATE.ziel.defizit = parseInt(e.target.value, 10);
@@ -4933,7 +5096,9 @@ function start(){
     $("lmStand").textContent = "Nährwerte: " + n("BLV") + " Lebensmittel aus der Schweizer Nährwertdatenbank"
       + (q.BLV && q.BLV.stand ? " (" + q.BLV.stand + ")" : "") + ", " + n("Migros") + " Migros- und "
       + n("Coop") + " Coop-Produkte aus Open Food Facts (Stand " + (NW.stand || "—")
-      + ", von Freiwilligen erfasst, nur vollständige)."
+      + ", von Freiwilligen erfasst, nur vollständige)"
+      + (q.Steiner ? ", " + n("Steiner") + " Produkte der Bäckerei Steiner aus ihrem Onlineshop (ohne Zuckerangabe)" : "")
+      + ".";
   }
   $("versionAnz").textContent = "Version " + VERSION;
   $("alkPlus").onclick  = () => {
