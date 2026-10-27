@@ -472,6 +472,89 @@ table.mahl td button.zu{width:auto;height:auto;padding:3px 8px;font-size:11.5px;
 table.mahl td button.zu:hover{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
 @media (max-width:640px){ table.mahl td.g, table.mahl th.g{display:none} }
 
+/* ---------- Training (1.12.0): eigener Bereich, Ablauf im Vollbild ---------- */
+.bereichtabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-top:-6px}
+.bereichtabs button{border:0;background:transparent;font:inherit;font-weight:650;color:var(--ink-3);padding:9px 16px;
+  border-bottom:2px solid transparent;cursor:pointer}
+.bereichtabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
+body[data-bereich="training"] .app > :not(.topbar):not(#geraetStand):not(.bereichtabs):not(#trainingSeite):not(.handytabs){display:none !important}
+body:not([data-bereich="training"]) #trainingSeite{display:none}
+.trseite{display:flex;flex-direction:column;gap:18px}
+.trseite .chips .lbl{min-width:92px}
+.trwoche{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.trtag{border:1px solid var(--line);border-radius:9px;padding:8px;background:var(--surface-2);cursor:pointer;min-height:72px;
+  display:flex;flex-direction:column;gap:2px;text-align:left;font:inherit;color:inherit}
+.trtag .wt{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.trtag .tn{font-weight:650;font-size:13px}
+.trtag .td{font-size:12px;color:var(--ink-3)}
+.trtag.ruhe{background:transparent;border-style:dashed}
+.trtag.ruhe .tn{color:var(--ink-3);font-weight:500}
+.trtag.akt{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.trtag.heute .wt::after{content:" · heute";color:var(--accent)}
+.trtag .ok{color:var(--ok)}
+.trstart{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.trsumme{color:var(--ink-2);font-variant-numeric:tabular-nums}
+.btn.trgross{margin-left:auto;font-size:15px;padding:10px 20px;border-radius:9px}
+.btn.rot{background:var(--bad-ink);border-color:var(--bad-ink);color:#fff}
+.trteil{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.trueb{border:1px solid var(--line);border-radius:9px;padding:9px 12px;display:grid;grid-template-columns:1fr auto;gap:6px 12px}
+.trueb .n{font-weight:650}
+.trueb .n small{font-weight:400;color:var(--ink-3);margin-left:6px}
+.trueb .vg{font-variant-numeric:tabular-nums;color:var(--ink-2);text-align:right;white-space:nowrap}
+.trueb .stufe{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}
+.trueb details{grid-column:1/-1;font-size:13px;color:var(--ink-2)}
+.trueb details summary{cursor:pointer;color:var(--ink-3);font-size:12px}
+.trueb .kette{font-size:12px;color:var(--ink-3);margin-top:4px}
+.trueb .kette b{color:var(--accent)}
+.treigen{border:1px solid var(--line);border-radius:9px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.treigen .n{font-weight:650;margin-right:auto}
+.treigen .z{flex-basis:100%;font-size:12.5px;color:var(--ink-2);white-space:pre-line}
+.trfilter{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.trfilter input[type=search]{flex:1;min-width:180px;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:6px 9px}
+.trgruppe h3{margin:6px 0 6px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.trlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.trlist .e{border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:13px}
+.trlist .e .k{display:flex;gap:8px;align-items:baseline}
+.trlist .e .k b{margin-right:auto}
+.trlist .e .s{font-size:11px;color:var(--ink-3);white-space:nowrap}
+.trlist .e .t{color:var(--ink-2);margin-top:3px}
+.trlist .e .a{font-size:11px;color:var(--ink-3);margin-top:3px}
+.trlist .e.fehlt{opacity:.5}
+#dlgEigen{width:min(640px,94vw)}
+#dlgEigen textarea{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:8px 9px;
+  font-family:ui-monospace,"Cascadia Mono","Consolas",monospace;font-size:13px;line-height:1.5;resize:vertical}
+.wiz{position:fixed;inset:0;z-index:60;background:var(--paper);display:flex;flex-direction:column;
+  padding:12px 16px calc(16px + env(safe-area-inset-bottom))}
+.wkopf{display:flex;align-items:center;gap:12px}
+.wx{width:44px;height:44px;border-radius:50%;border:1px solid var(--line-2);background:var(--surface);font-size:18px;color:var(--ink-2);cursor:pointer;flex:none}
+.wfort{flex:1;height:6px;border-radius:3px;background:var(--sunken);overflow:hidden}
+.wfort div{height:100%;background:var(--accent);width:0;transition:width .3s}
+.wgesamt{font-variant-numeric:tabular-nums;color:var(--ink-3);min-width:44px;text-align:right}
+.wmitte{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;
+  max-width:640px;margin:0 auto;width:100%}
+.wart{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.wart.pause, .wuhr.pause{color:var(--ok)}
+.wname{font-size:clamp(26px,7vw,44px);line-height:1.15;font-weight:750}
+.wziel{font-size:clamp(20px,5vw,28px);font-weight:650;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.wuhr{font-size:clamp(64px,22vw,140px);font-weight:750;font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-.02em}
+.wtext{color:var(--ink-2);font-size:15px;max-width:520px}
+.wtext details summary{cursor:pointer;color:var(--ink-3)}
+.wweiter{color:var(--ink-3);font-size:14px}
+.wfuss{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;max-width:640px;margin:0 auto;width:100%}
+.wfuss .btn{flex:1;min-height:64px;font-size:20px;border-radius:14px;justify-content:center}
+.wfuss .btn.primary{flex:2}
+.wfuss .btn.gruen{flex:2;background:var(--ok);border-color:var(--ok);color:#fff}
+.wfuss .wrueck{display:flex;gap:8px;width:100%}
+.wfuss .wrueck button{flex:1;min-height:50px;border:1px solid var(--line-2);background:var(--surface);border-radius:999px;font:inherit;font-size:15px;color:var(--ink);cursor:pointer}
+.wfuss .wrueck button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.wzahl{width:3.2em;font:inherit;text-align:center;background:transparent;color:var(--ink);border:0;
+  border-bottom:3px solid var(--accent);padding:0;-moz-appearance:textfield}
+.wzahl::-webkit-outer-spin-button, .wzahl::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.wdialog{position:absolute;inset:0;background:rgba(10,12,16,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.wbox{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;max-width:380px}
+.wbox p{margin:0 0 14px}
+body.wiz-offen{overflow:hidden}
+
 /* ---------- Am Geraet (ueber eine Webadresse) ---------- */
 #btnMenue, .handysumme, .handytabs, #btnLaden{display:none}
 body.geraet #btnLaden{display:inline-flex}
@@ -517,7 +600,13 @@ body.geraet #serverPanel{display:block}
   body[data-tab="verlauf"] .app [data-tab]:not(button):not([data-tab="verlauf"]),
   body[data-tab="einst"] .app [data-tab]:not(button):not([data-tab="einst"]){display:none}
 
-  .handytabs{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;
+  /* Training: am Handy der vierte Tab statt der Bereich-Tabs oben */
+  .bereichtabs{display:none}
+  .trwoche{grid-template-columns:repeat(4,1fr)}
+  .trseite .chips .lbl{min-width:100%}
+  .btn.trgross{margin-left:0;flex:1;justify-content:center}
+  .trlist{grid-template-columns:1fr}
+  .handytabs{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;
     background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
   .handytabs button{border:0;background:transparent;min-height:54px;padding:6px 0 8px;font-size:12px;font-weight:600;
     color:var(--ink-3);display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer}
@@ -603,6 +692,63 @@ body.geraet #serverPanel{display:block}
   <div class="geraetstand" id="geraetStand" hidden></div>
 
   <div class="note info" id="corHinweis" style="margin:0" hidden></div>
+
+  <!-- Bereiche am PC: Protokoll und Training (am Handy unten in den Tabs). Marco, 26.10.2026: „ich möchte
+       das training in einem seperierten tab, nicht alles auf einer seite beim protokoll“ -->
+  <nav class="bereichtabs" id="bereichTabs" aria-label="Bereiche">
+    <button type="button" data-bereich="protokoll" class="on">Protokoll</button>
+    <button type="button" data-bereich="training">Training</button>
+  </nav>
+
+  <!-- ---------------- Training (1.12.0) ---------------- -->
+  <section class="trseite" id="trainingSeite" data-tab="training">
+    <details class="panel acc" id="trPlan">
+      <summary><span>Plan</span><span class="hint" id="trPlanHint"></span></summary>
+      <div class="body">
+        <div class="chips" id="trZiel"></div>
+        <div class="chips" id="trModus"></div>
+        <div class="chips" id="trStufe"></div>
+        <div class="chips" id="trTage"></div>
+        <div class="chips" id="trDauer"></div>
+        <div class="chips" id="trAus"></div>
+        <p class="explain">Alles hier ist wählbar; Woche und Training des Tages entstehen daraus. Wer „Fitnessstudio“
+          wählt, hat damit auch Stange, Bank, Hanteln, Kettlebell und Bänder — der Plan nimmt dann die Geräte-Übungen.</p>
+      </div>
+    </details>
+
+    <section class="panel">
+      <h2><span>Diese Woche</span><span class="hint" id="trWocheHint"></span></h2>
+      <div class="body"><div class="trwoche" id="trWoche"></div></div>
+    </section>
+
+    <section class="panel" id="trHeute">
+      <h2><span id="trTagTitel">Heute</span><span class="hint" id="trTagHint"></span></h2>
+      <div class="trstart"><span class="trsumme" id="trSumme"></span>
+        <button type="button" class="btn primary trgross" id="trStarten">▶ Training starten</button></div>
+      <div class="body" id="trUebersicht"></div>
+    </section>
+
+    <section class="panel">
+      <h2><span>Eigene Trainings</span><span class="hint">als Text, z. B. dein Schwimmtraining</span></h2>
+      <div class="body" id="trEigene"></div>
+    </section>
+
+    <details class="panel acc" id="trListe">
+      <summary><span>Übungsliste</span><span class="hint" id="trListeHint"></span></summary>
+      <div class="body">
+        <div class="trfilter">
+          <input type="search" id="trSuche" placeholder="Übung suchen …" aria-label="Übung suchen">
+          <label><input type="checkbox" id="trNurMeine"> nur mit meiner Ausrüstung</label>
+        </div>
+        <div id="trUebungen"></div>
+      </div>
+    </details>
+
+    <p class="explain">Ein Training kommt am Schluss als Aktivität in den Tag — mit den gemessenen Minuten, beim
+      Schwimmen mit der Strecke. Die kcal sind netto wie bei allen Aktivitäten: der Alltagsanteil ist abgezogen,
+      darum liegen sie unter dem, was Uhren zeigen. Die Pläne sind eine Orientierung, keine Trainings- oder
+      Therapieberatung: bei Schmerzen aufhören, Stufe zurück.</p>
+  </section>
 
   <div class="grid">
 
@@ -1014,11 +1160,57 @@ body.geraet #serverPanel{display:block}
   <div class="handysumme" id="handySumme"></div>
   <nav class="handytabs" id="handyTabs" aria-label="Bereiche">
     <button type="button" data-tab="tag"><span class="i">✎</span>Tag</button>
+    <button type="button" data-tab="training"><span class="i">▶</span>Training</button>
     <button type="button" data-tab="verlauf"><span class="i">↗</span>Verlauf</button>
     <button type="button" data-tab="einst"><span class="i">⚙</span>Einstellungen</button>
   </nav>
 
 </div>
+
+<!-- Training im Vollbild: immer nur ein Schritt (Marco: „ich starte und dann ist nur diese übung auf dem
+     bildschirm bis ich stopp drücke, dann kommt der pausen timer usw“) -->
+<div class="wiz" id="wiz" hidden>
+  <div class="wkopf">
+    <button type="button" class="wx" id="wAbbruch" aria-label="Training abbrechen">✕</button>
+    <div class="wfort"><div id="wBalken"></div></div>
+    <span class="wgesamt" id="wGesamt">0:00</span>
+  </div>
+  <div class="wmitte">
+    <div class="wart" id="wArt"></div>
+    <div class="wname" id="wName"></div>
+    <div class="wziel" id="wZiel"></div>
+    <div class="wuhr" id="wUhr"></div>
+    <div class="wtext" id="wText"></div>
+    <div class="wweiter" id="wWeiter"></div>
+  </div>
+  <div class="wfuss" id="wFuss"></div>
+  <div class="wdialog" id="wDialog" hidden>
+    <div class="wbox"><p><b>Training abbrechen?</b><br>Was bis jetzt gemacht ist, kannst du trotzdem in den Tag eintragen.</p>
+      <div class="dlgfoot"><button type="button" class="btn" id="wWeitermachen">Weitermachen</button>
+        <button type="button" class="btn rot" id="wBeenden">Abbrechen</button></div></div>
+  </div>
+</div>
+
+<dialog id="dlgEigen">
+  <h2>Eigenes Training</h2>
+  <div class="body">
+    <div class="row2">
+      <div class="field"><label for="eigTrName">Name</label><input type="text" id="eigTrName"></div>
+      <div class="field"><label for="eigTrArt">Aktivitätsart</label><select id="eigTrArt"></select></div>
+    </div>
+    <div class="field"><label for="eigTrText">Ablauf, eine Zeile je Strecke oder Übung</label>
+      <textarea id="eigTrText" rows="9" spellcheck="false"></textarea></div>
+    <p class="explain">So: <span class="mono">Aufwärmen: 100 m Kraul</span> · <span class="mono">2× 100 m Technik</span> ·
+      <span class="mono">3× 4×50 m Sprint | Pause 2 min</span> — „Teil:“ vorne ist freiwillig, „N×“ wiederholt,
+      „| Pause …“ kommt nach jeder Wiederholung. Die Strecke zählt für die kcal.</p>
+    <p class="explain" id="eigTrVorschau"></p>
+    <div class="dlgfoot">
+      <button class="btn ghost" id="eigTrLoeschen" type="button">Löschen</button>
+      <button class="btn ghost" id="eigTrAbbruch" type="button">Abbrechen</button>
+      <button class="btn primary" id="eigTrOk" type="button">Speichern</button>
+    </div>
+  </div>
+</dialog>
 
 <dialog id="dlg">
   <h2 id="dlgTitel">Hinweis</h2>
@@ -1201,6 +1393,9 @@ const CONFIG = {
     {id:"kart",     name:"Kart fahren",             kcalProMinKg:0.056,  minVorgabe:30,  kmh:0,    distEinheit:"km", distVorgabe:0,    hmFaktor:0},
     {id:"ausdauer", name:"Ausdauer, sonstiges",     kcalProMinKg:0.100,  minVorgabe:45,  kmh:0,    distEinheit:"km", distVorgabe:0,    hmFaktor:0},
     {id:"gemischt", name:"Gemischt",                kcalProMinKg:0.065,  minVorgabe:60,  kmh:0,    distEinheit:"km", distVorgabe:0,    hmFaktor:0},
+    // seit 1.12.0 fürs Training: Intervalle/auf Zeit (MET 8) und Beweglichkeit (MET 2,5), netto wie alle
+    {id:"zirkel",   name:"Zirkeltraining",          kcalProMinKg:0.117,  minVorgabe:30,  kmh:0,    distEinheit:"km", distVorgabe:0,    hmFaktor:0},
+    {id:"beweglich",name:"Beweglichkeit",           kcalProMinKg:0.021,  minVorgabe:20,  kmh:0,    distEinheit:"km", distVorgabe:0,    hmFaktor:0},
   ],
   /* 7700 kcal je Kilogramm Körperfett. Reines Fett hätte rund 9000, aber
      Fettgewebe besteht nur zu etwa 87 % aus Lipid, der Rest ist Wasser und
@@ -1210,6 +1405,163 @@ const CONFIG = {
      Wasser verloren gehen und der Umsatz sinkt. Übliche Bandbreite in der
      Literatur: 7000 bis 9500. */
   kcalProKgFett: 7700,
+
+  /* ---------------- Training (1.12.0) ----------------
+     Marco, 26.10.2026: „kannst du auch trainingspläne ala madbarz usw erstellen?“ — Ziel, Umfang und
+     Geräte selbst wählbar, Ablauf „wie ein wizard … freeletics macht das auch so“, Doppel-Up, Übungen
+     fürs Fitnessstudio (Madlena). Entwurf: Entwurf/Entwurf-Training.html. Eigene Beschreibungen, keine
+     Inhalte anderer Apps. aus: was eine Übung braucht (eines davon genügt), leer = Körpergewicht.
+     art: "wdh" (Wiederholungen) oder "sek" (halten/Intervall). wdh: eigener Bereich schwerer Übungen. */
+  uebungen: {
+    wandLs:   {n:"Wand-Liegestütz", art:"wdh", tipp:"Hände schulterbreit an der Wand, Körper gerade, Brust zur Wand und zurück."},
+    knieLs:   {n:"Knie-Liegestütz", art:"wdh", tipp:"Auf den Knien, Hüfte gestreckt — Schulter, Hüfte und Knie bilden eine Linie."},
+    schraegLs:{n:"Schräg-Liegestütz", art:"wdh", aus:["stuhl"], tipp:"Hände auf Bank oder Stuhl, je höher, desto leichter. Ellbogen ca. 45° vom Körper."},
+    ls:       {n:"Liegestütz", art:"wdh", tipp:"Körper wie ein Brett, Brust bis kurz über den Boden, ganz hinauf strecken."},
+    engLs:    {n:"Enge Liegestütz", art:"wdh", tipp:"Hände unter den Schultern, Ellbogen eng am Körper — mehr Trizeps."},
+    fussLs:   {n:"Liegestütz, Füsse erhöht", art:"wdh", aus:["stuhl"], tipp:"Füsse auf der Bank, Rumpf fest — mehr obere Brust und Schulter."},
+    archerLs: {n:"Archer-Liegestütz", art:"wdh", wdh:[4,8], tipp:"Sehr breit, abwechselnd zu einer Seite senken, der andere Arm bleibt fast gestreckt."},
+    bankDips: {n:"Bank-Dips", art:"wdh", aus:["stuhl"], tipp:"Hände hinter dir auf der Kante, Schultern weg von den Ohren, bis ca. 90° im Ellbogen."},
+    ringDips: {n:"Dips an Ringen oder Barren", art:"wdh", wdh:[5,10], aus:["ringe","stange"], tipp:"Stütz gestreckt halten, senken bis Schulter auf Ellbogenhöhe, kontrolliert hoch."},
+    pikeLs:   {n:"Pike-Liegestütz", art:"wdh", tipp:"Hüfte hoch (umgekehrtes V), Kopf Richtung Boden zwischen die Hände — Schultern."},
+    superman: {n:"Superman", art:"wdh", tipp:"Bauchlage, Arme und Beine gleichzeitig kurz anheben, 2 s halten. Ersatz fürs Ziehen ohne Stange."},
+    ytw:      {n:"Y-T-W in Bauchlage", art:"wdh", tipp:"Arme als Y, T und W anheben, Schulterblätter zusammen — oberer Rücken."},
+    bandRud:  {n:"Rudern mit Gummiband", art:"wdh", aus:["band"], tipp:"Band an der Tür befestigen, Ellbogen nah am Körper nach hinten ziehen."},
+    ringRud:  {n:"Rudern an Ringen oder tiefer Stange", art:"wdh", aus:["ringe","stange"], tipp:"Körper schräg, gerade wie ein Brett, Brust zu den Griffen — je flacher, desto schwerer."},
+    negKlimm: {n:"Negative Klimmzüge", art:"wdh", wdh:[3,6], aus:["stange","ringe"], tipp:"Oben starten (Sprung oder Stuhl), in 3–5 s langsam ablassen."},
+    klimm:    {n:"Klimmzug", art:"wdh", wdh:[3,8], aus:["stange","ringe"], tipp:"Aus dem Hang, Schulterblätter zuerst nach unten, Kinn über die Stange."},
+    archKlimm:{n:"Archer-Klimmzug", art:"wdh", wdh:[2,5], aus:["stange"], tipp:"Breit greifen, zu einer Hand ziehen, der andere Arm streckt sich."},
+    hantelRud:{n:"Rudern einarmig mit Kurzhantel", art:"wdh", aus:["hantel"], tipp:"Hand und Knie auf der Bank, Hantel zur Hüfte ziehen, Rücken gerade."},
+    hock:     {n:"Kniebeuge", art:"wdh", tipp:"Füsse schulterbreit, Gewicht auf der ganzen Sohle, Hüfte nach hinten unten, Knie folgen den Zehen."},
+    stuhlHock:{n:"Kniebeuge zum Stuhl", art:"wdh", aus:["stuhl"], tipp:"Bis die Sitzfläche berührt ist, ohne abzusitzen wieder hoch."},
+    hockTempo:{n:"Kniebeuge langsam", art:"wdh", tipp:"3 s hinunter, 1 s unten halten, zügig hoch — macht die einfache Kniebeuge deutlich schwerer."},
+    sprungHockW:{n:"Kniebeuge-Sprung", art:"wdh", wdh:[6,10], tipp:"Tief in die Kniebeuge, explosiv hochspringen, weich landen und gleich weiter."},
+    gobletHock:{n:"Goblet-Kniebeuge", art:"wdh", aus:["hantel","kb"], tipp:"Gewicht vor der Brust, aufrecht bleiben, tief und kontrolliert."},
+    ausfall:  {n:"Ausfallschritt", art:"wdh", tipp:"Grosser Schritt, hinteres Knie Richtung Boden, abwechselnd links und rechts."},
+    bulgar:   {n:"Bulgarische Kniebeuge", art:"wdh", wdh:[6,10], aus:["stuhl"], tipp:"Hinterer Fuss auf der Bank, vorderes Bein beugen — je Seite."},
+    pistolAss:{n:"Pistol-Kniebeuge, gestützt", art:"wdh", wdh:[4,8], tipp:"Einbeinig zur Bank oder mit Halt an Türrahmen/Ringen, anderes Bein vorne."},
+    pistol:   {n:"Pistol-Kniebeuge", art:"wdh", wdh:[3,6], tipp:"Einbeinig ganz tief, Arme nach vorne als Gegengewicht."},
+    bridge:   {n:"Hüftheben", art:"wdh", tipp:"Rückenlage, Füsse nah am Gesäss, Hüfte hoch bis Knie–Hüfte–Schulter eine Linie."},
+    bridge1:  {n:"Hüftheben einbeinig", art:"wdh", tipp:"Wie Hüftheben, ein Bein gestreckt in der Luft — je Seite."},
+    hipThrust:{n:"Hüftheben, Schultern auf der Bank", art:"wdh", aus:["stuhl"], tipp:"Schulterblätter auf der Kante, Hüfte ganz strecken, oben 1 s halten."},
+    kbSwing:  {n:"Kettlebell-Swing", art:"wdh", aus:["kb"], tipp:"Aus der Hüfte, nicht aus den Armen; Rücken gerade, oben Gesäss anspannen."},
+    rdlHantel:{n:"Rumänisches Kreuzheben mit Kurzhanteln", art:"wdh", aus:["hantel","kb"], tipp:"Knie leicht gebeugt, Hüfte nach hinten, Gewicht nah an den Beinen."},
+    waden:    {n:"Wadenheben", art:"wdh", tipp:"Auf einer Stufe, ganz hoch und ganz tief — langsam."},
+    plank:    {n:"Unterarmstütz", art:"sek", tipp:"Ellbogen unter den Schultern, Körper gerade, Bauch und Gesäss fest."},
+    seitPlank:{n:"Seitstütz", art:"sek", tipp:"Auf einem Unterarm, Hüfte hoch, je Seite."},
+    deadBug:  {n:"Dead Bug", art:"wdh", tipp:"Rückenlage, Arme und Knie hoch; Gegenarm und -bein strecken, unterer Rücken bleibt am Boden."},
+    hollow:   {n:"Hollow Hold", art:"sek", tipp:"Rückenlage, Schultern und Beine knapp über dem Boden, Lendenwirbel am Boden."},
+    knieHang: {n:"Knieheben im Hang", art:"wdh", aus:["stange","ringe"], tipp:"Aus dem Hang Knie zur Brust, ohne Schwung."},
+    beinHang: {n:"Beinheben im Hang", art:"wdh", wdh:[5,10], aus:["stange","ringe"], tipp:"Gestreckte Beine bis 90° oder höher, langsam ablassen."},
+    hampel:   {n:"Hampelmann", art:"sek", tipp:"Locker springen, Arme über den Kopf."},
+    hoheKnie: {n:"Hohe Knie am Ort", art:"sek", tipp:"Knie bis Hüfthöhe, auf den Fussballen."},
+    mountain: {n:"Mountain Climbers", art:"sek", tipp:"Liegestützposition, Knie abwechselnd schnell zur Brust."},
+    skater:   {n:"Skater-Sprünge", art:"sek", tipp:"Seitlich von einem Bein aufs andere springen, weich landen."},
+    burpee:   {n:"Burpees", art:"sek", tipp:"Hocke, Füsse nach hinten in den Stütz, zurück und hochspringen."},
+    katzeKuh: {n:"Katze-Kuh", art:"sek", tipp:"Vierfüssler, Rücken abwechselnd rund und hohl, mit dem Atem."},
+    welt:     {n:"Weltbeste Dehnung", art:"sek", tipp:"Tiefer Ausfallschritt, Hand innen am Fuss, anderen Arm zur Decke drehen — je Seite."},
+    hueftb:   {n:"Hüftbeuger-Dehnung", art:"sek", tipp:"Halbkniend, Becken nach vorne schieben, Gesäss anspannen — je Seite."},
+    bws:      {n:"Brustwirbel-Rotation", art:"sek", tipp:"Seitlage, Knie angewinkelt, oberen Arm im Bogen nach hinten öffnen — je Seite."},
+    kind:     {n:"Kindhaltung", art:"sek", tipp:"Auf den Fersen sitzen, Arme weit nach vorne, ruhig atmen."},
+    hams:     {n:"Rückseite Oberschenkel dehnen", art:"sek", tipp:"Ein Bein gestreckt vor, Rücken lang, aus der Hüfte nach vorne neigen — je Seite."},
+    haengen:  {n:"Hängen an der Stange", art:"sek", aus:["stange","ringe"], tipp:"Locker hängen, Schultern sanft aktiv — entlastet die Wirbelsäule."},
+    // Fitnessstudio (Marco: „hole auch genügend übungen fürs fitness, madlena geht gerne ins fitness“)
+    brustpresse:{n:"Brustpresse (Maschine)", art:"wdh", aus:["gym"], tipp:"Griffe auf Brusthöhe, Schulterblätter an die Lehne, drücken ohne die Ellbogen ganz zu blockieren."},
+    khBank:   {n:"Kurzhantel-Bankdrücken", art:"wdh", aus:["gym"], tipp:"Auf der Flachbank, Hanteln über der Brust, Ellbogen ca. 45° vom Körper, kontrolliert ablassen."},
+    lhBank:   {n:"Bankdrücken (Langhantel)", art:"wdh", wdh:[5,10], aus:["gym"], tipp:"Füsse fest am Boden, Schulterblätter zusammen, Stange zur unteren Brust — mit Sicherung oder Partner."},
+    schraegBank:{n:"Schrägbankdrücken (Kurzhantel)", art:"wdh", aus:["gym"], tipp:"Bank 30–45°, Hanteln über der oberen Brust drücken."},
+    schulterMa:{n:"Schulterpresse (Maschine)", art:"wdh", aus:["gym"], tipp:"Rücken an die Lehne, Griffe auf Schulterhöhe, gerade nach oben drücken."},
+    khSchulter:{n:"Schulterdrücken (Kurzhantel)", art:"wdh", aus:["gym"], tipp:"Sitzend oder stehend, Hanteln von Schulterhöhe über den Kopf, Rumpf fest."},
+    lhSchulter:{n:"Schulterdrücken stehend (Langhantel)", art:"wdh", wdh:[5,8], aus:["gym"], tipp:"Gesäss und Bauch fest, Stange vor dem Gesicht vorbei über den Kopf."},
+    trizepsKabel:{n:"Trizepsdrücken am Kabel", art:"wdh", aus:["gym"], tipp:"Ellbogen am Körper fixiert, nur die Unterarme nach unten strecken."},
+    latzug:   {n:"Latzug", art:"wdh", aus:["gym"], tipp:"Brust raus, Stange zur oberen Brust ziehen, Schulterblätter nach unten."},
+    kabelRud: {n:"Rudern am Kabel, sitzend", art:"wdh", aus:["gym"], tipp:"Rücken gerade, Griff zum Bauch ziehen, Schulterblätter zusammen, langsam zurück."},
+    assKlimm: {n:"Klimmzug mit Unterstützung (Maschine)", art:"wdh", aus:["gym"], tipp:"Gegengewicht so wählen, dass 8–10 saubere Wiederholungen gehen; mit der Zeit weniger Hilfe."},
+    lhRud:    {n:"Langhantelrudern vorgebeugt", art:"wdh", wdh:[6,10], aus:["gym"], tipp:"Oberkörper ca. 45° vorgebeugt, Rücken gerade, Stange zum Bauchnabel ziehen."},
+    facePull: {n:"Face Pulls am Kabel", art:"wdh", aus:["gym"], tipp:"Seil auf Augenhöhe, zum Gesicht ziehen, Ellbogen hoch und aussen — gut für die Schultern."},
+    curl:     {n:"Bizepscurls (Kurzhantel)", art:"wdh", aus:["gym","hantel"], tipp:"Ellbogen am Körper, ohne Schwung hoch, langsam ablassen."},
+    brustRud: {n:"Rudern brustgestützt (Maschine)", art:"wdh", aus:["gym"], tipp:"Brust an das Polster, Griffe zum Körper ziehen, oben kurz halten."},
+    beinpresse:{n:"Beinpresse", art:"wdh", aus:["gym"], tipp:"Füsse schulterbreit, Knie folgen den Zehen, unten das Becken nicht abheben lassen."},
+    beinstreck:{n:"Beinstrecker (Maschine)", art:"wdh", aus:["gym"], tipp:"Polster über dem Sprunggelenk, langsam strecken, oben kurz halten."},
+    hackenschm:{n:"Hackenschmidt-Kniebeuge", art:"wdh", aus:["gym"], tipp:"Rücken am Polster, tief und kontrolliert, Fersen bleiben unten."},
+    lhHock:   {n:"Kniebeuge (Langhantel)", art:"wdh", wdh:[5,10], aus:["gym"], tipp:"Stange auf dem oberen Rücken, Brust hoch, tief bis die Hüfte unter Kniehöhe ist — im Rack mit Sicherung."},
+    frontHock:{n:"Frontkniebeuge (Langhantel)", art:"wdh", wdh:[4,8], aus:["gym"], tipp:"Stange vorne auf den Schultern, Ellbogen hoch, aufrecht tief."},
+    stepUp:   {n:"Step-ups auf den Kasten", art:"wdh", aus:["gym","stuhl"], tipp:"Ganzer Fuss auf den Kasten, mit dem oberen Bein hochdrücken — je Seite."},
+    khAusfall:{n:"Ausfallschritte mit Kurzhanteln", art:"wdh", aus:["gym","hantel"], tipp:"Hanteln seitlich, grosser Schritt, hinteres Knie Richtung Boden — je Seite."},
+    beinbeug: {n:"Beinbeuger (Maschine)", art:"wdh", aus:["gym"], tipp:"Polster über der Ferse, Beine beugen, langsam zurück."},
+    lhHip:    {n:"Hip Thrust (Langhantel)", art:"wdh", aus:["gym"], tipp:"Schultern auf der Bank, Stange gepolstert auf der Hüfte, ganz strecken."},
+    lhRdl:    {n:"Rumänisches Kreuzheben (Langhantel)", art:"wdh", wdh:[6,10], aus:["gym"], tipp:"Knie leicht gebeugt, Hüfte nach hinten, Stange nah an den Beinen bis Mitte Schienbein."},
+    kreuzheben:{n:"Kreuzheben", art:"wdh", wdh:[3,6], aus:["gym"], tipp:"Stange über dem Mittelfuss, Rücken gerade, aus den Beinen hochdrücken — Technik vor Gewicht."},
+    wadenMa:  {n:"Wadenheben (Maschine)", art:"wdh", aus:["gym"], tipp:"Ganz hoch und ganz tief, langsam."},
+    kabelCrunch:{n:"Kabel-Crunch kniend", art:"wdh", aus:["gym"], tipp:"Seil am Kopf, Oberkörper einrollen, Hüfte bleibt ruhig."},
+    pallof:   {n:"Pallof-Press", art:"wdh", aus:["gym","band"], tipp:"Seitlich zum Kabel, Griff vor der Brust nach vorne drücken, Rumpf dreht nicht mit — je Seite."},
+    abRoller: {n:"Bauchroller", art:"wdh", wdh:[5,12], aus:["gym"], tipp:"Kniend, Rumpf fest, nur so weit hinaus, wie der Rücken gerade bleibt."},
+    rudergeraet:{n:"Rudergerät", art:"sek", aus:["gym"], tipp:"Beine, dann Rücken, dann Arme — zurück in umgekehrter Reihenfolge, zügig."},
+    crosstrainer:{n:"Crosstrainer", art:"sek", aus:["gym"], tipp:"Zügiges Tempo, Widerstand so, dass Sprechen gerade noch geht."},
+    airbike:  {n:"Air-Bike", art:"sek", aus:["gym"], tipp:"Arme und Beine zusammen, im Intervall voll treten."},
+  },
+  /* Ketten: leicht → schwer, je Übung die Schwierigkeit 0–5. Gewählt wird die schwerste, die zur Stufe
+     passt (Einsteiger 1, Fortgeschritten 3, Profi 5) — nicht die Stelle in der Kette, sonst sprang eine
+     kurze Kette bei „Fortgeschritten“ ans Ende (im Entwurf gefunden). */
+  uebKetten: {
+    druck:   [["wandLs",0],["knieLs",1],["schraegLs",1],["brustpresse",1],["ls",2],["khBank",2],["engLs",3],["lhBank",3],
+              ["schraegBank",3],["fussLs",4],["archerLs",5]],
+    druck2:  [["trizepsKabel",0],["bankDips",1],["schulterMa",1],["khSchulter",2],["pikeLs",3],["lhSchulter",3],["ringDips",4]],
+    zug:     [["superman",0],["ytw",1],["bandRud",1],["ringRud",1],["latzug",1],["kabelRud",1],["hantelRud",2],["assKlimm",2],
+              ["negKlimm",3],["lhRud",3],["klimm",4],["archKlimm",5]],
+    zug2:    [["ytw",0],["facePull",0],["curl",1],["bandRud",1],["brustRud",1],["ringRud",2],["negKlimm",3],["klimm",4]],
+    knie:    [["beinstreck",0],["stuhlHock",0],["beinpresse",1],["hock",1],["gobletHock",2],["hockTempo",2],["hackenschm",2],
+              ["lhHock",3],["sprungHockW",4],["frontHock",4]],
+    einbein: [["stepUp",1],["ausfall",1],["khAusfall",2],["bulgar",3],["pistolAss",4],["pistol",5]],
+    huefte:  [["beinbeug",0],["bridge",0],["bridge1",2],["rdlHantel",2],["hipThrust",3],["lhHip",3],["lhRdl",3],["kbSwing",3],["kreuzheben",4]],
+    waden:   [["waden",0],["wadenMa",0]],
+    rumpf:   [["deadBug",0],["plank",1],["kabelCrunch",1],["pallof",1],["knieHang",2],["hollow",3],["abRoller",3],["beinHang",4]],
+    seite:   [["seitPlank",1]],
+    kond:    [["hampel",0],["rudergeraet",0],["crosstrainer",0],["hoheKnie",1],["mountain",2],["skater",2],["airbike",2],["burpee",4]],
+    mobil:   [["katzeKuh",0],["welt",0],["hueftb",0],["bws",0],["hams",0],["kind",0],["haengen",0]],
+  },
+  uebGruppen: {druck:"Drücken", druck2:"Drücken: Schulter und Trizeps", zug:"Ziehen", zug2:"Ziehen: oberer Rücken und Arme",
+               knie:"Beine: Kniebeuge", einbein:"Beine: einbeinig", huefte:"Hüfte und Gesäss", waden:"Waden",
+               rumpf:"Rumpf", seite:"Rumpf seitlich", kond:"Kondition", mobil:"Beweglichkeit"},
+  trainingAusruestung: [["kg","Körpergewicht"],["stange","Klimmzugstange"],["ringe","Ringe"],["stuhl","Stuhl / Bank"],
+                        ["band","Gummiband"],["hantel","Kurzhanteln"],["kb","Kettlebell"],["gym","Fitnessstudio"]],
+  // Im Fitnessstudio gibt es das auch: Stange, Bank, Bänder, Kurzhanteln, Kettlebell (Ringe nicht überall)
+  trainingImStudio: ["stange","stuhl","band","hantel","kb"],
+  // Schwere Langhantelübungen nie auf Zeit oder im Intervall: unter Ermüdung leidet die Technik zuerst
+  trainingNichtAufZeit: ["lhBank","lhSchulter","lhRud","lhHock","frontHock","lhHip","lhRdl","kreuzheben"],
+  // art: die Aktivitätsart, unter der das Training in den Tag kommt (kcal wie jede Aktivität)
+  trainingZiele: {
+    fett:   {n:"Fett verlieren, Muskeln halten", saetze:3, wdh:[8,12], sek:30, pause:60, art:"kraft", finisher:true},
+    muskel: {n:"Muskelaufbau", saetze:4, wdh:[6,12], sek:40, pause:90, art:"kraft"},
+    kond:   {n:"Kondition", art:"zirkel"},
+    mobil:  {n:"Beweglichkeit, Rücken", runden:2, halten:45, art:"beweglich"},
+  },
+  trainingStufen: [{id:"ein", n:"Einsteiger", basis:1}, {id:"fort", n:"Fortgeschritten", basis:3}, {id:"profi", n:"Profi", basis:5}],
+  // Formen (Anregung Freeletics, eigene Umsetzung); Doppel-Up nach Marco
+  trainingModi: [["saetze","Sätze & Pausen"],["intervall","Intervalle 40/20"],["zeit","Runden auf Zeit"],["doppel","Doppel-Up"]],
+  trainingDauern: [15, 20, 30, 45, 60],
+  trainingVorlagen: {
+    ganzA: {n:"Ganzkörper A", g:["knie","druck","zug","huefte","rumpf","druck2","seite"]},
+    ganzB: {n:"Ganzkörper B", g:["einbein","druck","zug","huefte","rumpf","zug2","waden"]},
+    oben:  {n:"Oberkörper", g:["druck","zug","druck2","zug2","rumpf","seite"]},
+    unten: {n:"Unterkörper", g:["knie","huefte","einbein","waden","rumpf","seite"]},
+    zirkA: {n:"Zirkel A", g:["kond","knie","druck","kond","rumpf","zug","kond","huefte"]},
+    zirkB: {n:"Zirkel B", g:["kond","einbein","druck2","kond","seite","zug2","kond","rumpf"]},
+    mobA:  {n:"Beweglichkeit", g:["mobil","mobil","mobil","mobil","mobil","mobil","mobil"]},
+  },
+  doppelPause: 45,        // Sekunden zwischen den Sätzen beim Nachholen
+  /* Eigene Trainings als Text, eine Zeile je Strecke oder Übung: „[Teil:] [N×] Text [| Pause 2 min]“.
+     Marco, 26.10.2026: „aufwärmen 100 kraul, 100m brust, training: 2x100m technik (kraul) 3x (4x50m (25m
+     sprint volle power, 25m locker) 2min pause), 300m kraul, 200m kraul, 100m ausschwimmen“. */
+  trainingEigeneVorlagen: [
+    {id:"schwimm1600", n:"Schwimmtraining 1600 m", art:"schwimm", text:[
+      "Aufwärmen: 100 m Kraul",
+      "Aufwärmen: 100 m Brust",
+      "Technik: 2× 100 m Kraul, Technik",
+      "Sprints: 3× 4×50 m: je 25 m Sprint volle Power, 25 m locker | Pause 2 min",
+      "Ausdauer: 300 m Kraul",
+      "Ausdauer: 200 m Kraul",
+      "Ausschwimmen: 100 m locker"].join("\n")},
+  ],
 
   /* Grobe Einteilung dessen, was im Fasten nacheinander passiert. AUSDRÜCKLICH
      Orientierungswerte aus der Literatur und keine Messung: der zeitliche
@@ -2712,6 +3064,260 @@ function cortanaUebernehmen(tage, plan, auswahl){
 }
 
 
+/* ---------------- Training (1.12.0) ----------------
+   Marco, 26.10.2026: Trainingspläne „ala madbarz“, alles selbst wählbar, Ablauf wie bei Freeletics,
+   Doppel-Up, Fitnessstudio, eigene Trainings (sein Schwimmen). Entwurf: Entwurf/Entwurf-Training.html.
+   Alles hier ist rein: der Plan kommt als Argument, nichts liest STATE. Ein absolviertes Training wird
+   eine gewöhnliche Aktivität im Tag (trainingEintrag) — die kcal rechnet trainingKcal() wie immer. */
+function trainingPlanVorgabe(){ return {ziel:"fett", modus:"saetze", stufe:"fort", tage:[0, 2, 4], dauer:30, aus:["kg"]}; }
+function trainingVorgabe(){ return {plan:trainingPlanVorgabe(), stufeDelta:{}, coach:0, best:{}, doppel:{}, erledigt:{}, eigene:[]}; }
+
+/** Die Form, die wirklich gilt: Beweglichkeit hat nur eine; Kondition kennt keine Sätze mit langen Pausen. */
+function trainingModus(plan){
+  if (plan.ziel === "mobil") return "mobil";
+  if (plan.ziel === "kond" && (plan.modus === "saetze" || plan.modus === "doppel")) return "intervall";
+  return plan.modus || "saetze";
+}
+function trainingVorhanden(plan){
+  const a = plan.aus || [];
+  return a.indexOf("gym") >= 0 ? a.concat(CONFIG.trainingImStudio) : a;
+}
+function trainingErlaubt(id, plan){
+  const u = CONFIG.uebungen[id];
+  if (!u) return false;
+  const da = trainingVorhanden(plan);
+  if (u.aus && !u.aus.some(x => da.indexOf(x) >= 0)) return false;
+  const m = trainingModus(plan);
+  return !((m === "zeit" || m === "intervall") && CONFIG.trainingNichtAufZeit.indexOf(id) >= 0);
+}
+const trainingIstGeraet = id => (CONFIG.uebungen[id].aus || []).indexOf("gym") >= 0;
+/** Kette einer Gruppe mit dem, was da ist: [[id, schwierigkeit], …] */
+function trainingKette(g, plan){ return (CONFIG.uebKetten[g] || []).filter(x => trainingErlaubt(x[0], plan)); }
+/** Die schwerste Übung, die zur Stufe passt. Im Fitnessstudio die schwerste Geräte-Übung dieser Stufe,
+    wenn es eine gibt — wer ins Studio geht, macht keine Liegestütze, solange eine Bank frei ist. */
+function trainingStelle(k, basis, plan){
+  let i = 0, geraet = -1;
+  k.forEach((x, j) => {
+    if (x[1] > basis) return;
+    i = j;
+    if (trainingIstGeraet(x[0])) geraet = j;
+  });
+  return (plan.aus || []).indexOf("gym") >= 0 && geraet >= 0 ? geraet : i;
+}
+
+/** Wochenplan: Vorlage je Wochentag (0 = Montag) oder null. Bis 3 Tage Ganzkörper A/B, ab 4 Oben/Unten. */
+function trainingWoche(plan){
+  const n = (plan.tage || []).length;
+  const folge = plan.ziel === "kond" ? ["zirkA", "zirkB"] : plan.ziel === "mobil" ? ["mobA"]
+    : n >= 4 ? ["oben", "unten"] : ["ganzA", "ganzB"];
+  const w = [null, null, null, null, null, null, null];
+  (plan.tage || []).slice().sort((a, b) => a - b).forEach((t, i) => { w[t] = folge[i % folge.length]; });
+  return w;
+}
+/** Montag bis Sonntag der Woche, in der d liegt — über den Kalender (tagPlus), nie +24 h. */
+function trainingWocheDaten(d){
+  const mo = tagPlus(d, -((alsDatum(d).getDay() + 6) % 7));
+  return [0, 1, 2, 3, 4, 5, 6].map(i => tagPlus(mo, i));
+}
+
+/** Sätze, Wiederholungen bzw. Sekunden und Pause einer Übung, je nach Ziel, Form und Stufe. */
+function trainingSatzVorgabe(u, Z, modus, basis){
+  const wdh = b => b[0] + Math.round((b[1] - b[0]) * basis / 5);
+  if (modus === "doppel") return {saetze:1, wert:null, pause:90, doppel:true};
+  if (modus === "intervall") return {saetze:4, wert:40, art:"sek", pause:20};
+  if (modus === "mobil") return {saetze:Z.runden, wert:Z.halten, art:"sek", pause:15};
+  if (modus === "zeit") return u.art === "sek" ? {saetze:3, wert:20 + basis * 5, pause:0}
+                                               : {saetze:3, wert:u.wdh ? wdh(u.wdh) : 8 + basis * 2, pause:0};
+  // schwere Übungen haben ihren eigenen, tieferen Bereich (Klimmzug 3–8, nicht 8–12)
+  return u.art === "sek" ? {saetze:Z.saetze, wert:Z.sek + basis * 5, pause:Z.pause}
+                         : {saetze:Z.saetze, wert:wdh(u.wdh || Z.wdh), pause:Z.pause};
+}
+/** Geschätzte Zeit einer Übung in Sekunden: 3 s je Wiederholung, Pausen dazwischen, 20 s Wechsel. */
+function trainingUebZeit(u){
+  if (u.doppel) return 300;          // Maximum, dann doppelt in 3–5 Sätzen
+  return u.saetze * (u.art === "sek" ? u.wert : u.wert * 3) + (u.saetze - 1) * u.pause + 20;
+}
+
+/** Training eines Tages. extra: {stufeDelta, coach} aus dem Protokoll (▲▼ je Übung, Rückmeldung). */
+function trainingTag(plan, vorlage, extra){
+  extra = extra || {};
+  const Z = CONFIG.trainingZiele[plan.ziel] || CONFIG.trainingZiele.fett;
+  const st = CONFIG.trainingStufen.find(s => s.id === plan.stufe) || CONFIG.trainingStufen[1];
+  const basis = Math.max(0, Math.min(5, st.basis + (zahl(extra.coach) || 0)));
+  const modus = trainingModus(plan);
+  const dauer = zahl(plan.dauer) || 30;
+  const ziel = dauer * 60, auf = dauer >= 20 ? 300 : 180, ab = dauer >= 30 ? 180 : 0;
+  const mitFinisher = !!Z.finisher && modus === "saetze" && dauer >= 30;
+  const haupt = ziel - auf - ab - (mitFinisher ? 240 : 0);
+  const V = CONFIG.trainingVorlagen[vorlage];
+  const imStudio = (plan.aus || []).indexOf("gym") >= 0;
+
+  // 1. Kandidaten: die Gruppen der Vorlage der Reihe nach, zweimal durch, jede Übung nur einmal
+  const kandidaten = [];
+  for (let durchgang = 0; durchgang < 2; durchgang++){
+    V.g.forEach((g, i) => {
+      const k = trainingKette(g, plan);
+      if (!k.length) return;
+      const schluessel = vorlage + ":" + i + ":" + durchgang;
+      let idx;
+      if (g === "mobil" || g === "kond"){
+        // abwechseln statt steigern; im Studio die Cardiogeräte, sonst was zur Stufe passt
+        const geraete = k.filter(x => trainingIstGeraet(x[0])), passend = k.filter(x => x[1] <= basis);
+        const pool = imStudio && geraete.length ? geraete : passend.length ? passend : k;
+        const id = pool[(i + durchgang * 3) % pool.length][0];
+        idx = k.findIndex(x => x[0] === id);
+      } else {
+        idx = Math.max(0, Math.min(k.length - 1, trainingStelle(k, basis, plan) + (zahl((extra.stufeDelta || {})[schluessel]) || 0)));
+      }
+      const id = k[idx][0];
+      if (kandidaten.some(u => u.id === id)) return;
+      const u = CONFIG.uebungen[id];
+      kandidaten.push(Object.assign({id, n:u.n, g, kette:k.map(x => x[0]), idx, schluessel, art:u.art},
+                                    trainingSatzVorgabe(u, Z, modus, basis)));
+    });
+  }
+  // 2. So viele Übungen, wie mit den vorgesehenen Sätzen hineinpassen — mindestens 3, höchstens 8
+  const liste = [];
+  let summe = 0;
+  for (const u of kandidaten){
+    if (liste.length >= 8 || (liste.length >= 3 && summe + trainingUebZeit(u) > haupt + 60)) break;
+    liste.push(u); summe += trainingUebZeit(u);
+  }
+  // 3. Sätze bzw. Runden angleichen, bis die Dauer passt: lange Trainings mehr, kurze weniger.
+  //    Bei „Runden auf Zeit“ für alle gleich, sonst reihum. Doppel-Up hat keine festen Sätze.
+  const MIN = 2, MAX = modus === "mobil" ? 4 : 6, gleich = modus === "zeit";
+  const zeit = () => liste.reduce((a, u) => a + trainingUebZeit(u), 0);
+  for (let schritt = 0; schritt < 80 && modus !== "doppel"; schritt++){
+    const t = zeit();
+    if (t < haupt - 90){
+      const kann = liste.filter(u => u.saetze < MAX);
+      if (!kann.length) break;
+      if (gleich) liste.forEach(u => u.saetze++); else kann.sort((a, b) => a.saetze - b.saetze)[0].saetze++;
+    } else if (t > haupt + 60){
+      const kann = liste.filter(u => u.saetze > MIN);
+      if (!kann.length) break;
+      if (gleich) liste.forEach(u => u.saetze--); else kann.sort((a, b) => b.saetze - a.saetze)[0].saetze--;
+    } else break;
+  }
+  // Finisher beim Fettziel: ein kurzer Zirkel am Schluss
+  let finisher = null;
+  if (mitFinisher){
+    const k = trainingKette("kond", plan).filter(x => x[1] <= Math.max(1, basis));
+    const a = CONFIG.uebungen[k[1 % k.length][0]].n, b = CONFIG.uebungen[k[2 % k.length][0]].n;
+    finisher = {sek:240, text:"4 Runden: " + a + " und " + b + ", je 20 s, 10 s Pause"};
+  }
+  const sek = auf + ab + zeit() + (finisher ? 240 : 0);
+  const wieKraft = modus === "saetze" || modus === "doppel";
+  return {vorlage, n:V.n, auf, ab, liste, finisher, modus, dauer:Math.round(sek / 60),
+          art:modus === "mobil" ? "beweglich" : wieKraft ? Z.art : "zirkel"};
+}
+
+/** Reicht der Plan nicht für die gewählte Dauer (zu wenig Ausrüstung, „auf Zeit“ über 30 min)?
+    Dann sagt es die Seite, statt still kürzer zu planen. */
+function trainingZuKurz(tr, dauer){ return tr.dauer < (zahl(dauer) || 0) - 4; }
+
+/** Der Ablauf: ein Schritt nach dem andern (Aufwärmen, Satz, Pause, …, Abkühlen). Nie zwei Pausen
+    hintereinander, nie eine Pause am Ende des Hauptteils. */
+function trainingSchritte(tr){
+  const s = [{typ:"warm", n:"Aufwärmen", sek:tr.auf, text:"Gelenke kreisen, 1 min Hampelmann, 10 Kniebeugen, 10 Armkreisen."}];
+  const satz = (u, i, von, runde) => ({typ:"satz", id:u.id, n:u.n, satzNr:i, von, runde,
+    sek:u.art === "sek" ? u.wert : null, ziel:u.wert + (u.art === "sek" ? " s" : " Wdh")});
+  if (tr.modus === "zeit"){
+    const runden = tr.liste.length ? tr.liste[0].saetze : 0;
+    for (let r = 1; r <= runden; r++) for (const u of tr.liste) s.push(satz(u, r, runden, true));
+  } else if (tr.modus === "doppel"){
+    tr.liste.forEach((u, j) => {
+      s.push({typ:"doppel", id:u.id, n:u.n, art:u.art, sek:null});
+      if (j < tr.liste.length - 1) s.push({typ:"pause", n:"Pause", sek:u.pause});
+    });
+  } else {
+    tr.liste.forEach((u, j) => {
+      for (let i = 1; i <= u.saetze; i++){
+        s.push(satz(u, i, u.saetze, false));
+        if (!(j === tr.liste.length - 1 && i === u.saetze))
+          s.push({typ:"pause", n:"Pause", sek:i < u.saetze ? u.pause : Math.max(30, u.pause)});
+      }
+    });
+  }
+  if (tr.finisher) s.push({typ:"warm", n:"Finisher-Zirkel", sek:tr.finisher.sek, text:tr.finisher.text});
+  if (tr.ab) s.push({typ:"warm", n:"Abkühlen", sek:tr.ab, text:"Ruhig atmen, Hüftbeuger und Brust je 30 s dehnen."});
+  return s;
+}
+
+/* Doppel-Up (Marco, 26.10.2026: „man macht soviele wie möglich im ersten durchgang zbsp. 32, dann muss
+   man die doppelte menge nochmals machen in so wenigen sätzen wie möglich, also 64“ — „so sieht man wie
+   viele man noch machen muss und in wie vielen sätzen es getan wurde“). Rein: gibt einen neuen Stand. */
+function doppelStart(){ return {max:null, rest:null, liste:[], saetze:0, fertig:false}; }
+function doppelZaehlen(d, n){
+  const r = JSON.parse(JSON.stringify(d));
+  n = Math.max(0, Math.round(zahl(n) || 0));
+  if (r.max === null){ r.max = n; r.rest = 2 * n; r.fertig = n === 0; return r; }
+  r.liste.push(n); r.saetze = r.liste.length;
+  r.rest = Math.max(0, r.rest - n);
+  r.fertig = r.rest === 0;
+  return r;
+}
+/** Besser als das letzte Mal: mehr im ersten Durchgang, oder gleich viel in weniger Sätzen. */
+function doppelBesser(neu, alt){
+  if (!alt) return true;
+  return neu.max > alt.max || (neu.max === alt.max && neu.saetze < alt.saetze);
+}
+
+/* Eigene Trainings als Text (Marcos Schwimmtraining): eine Zeile je Strecke oder Übung,
+   „[Teil:] [N×] Text [| Pause 2 min]“. Die Strecke ist die erste Angabe in m oder km im Text,
+   „4×50 m“ zählt als 200 m. Ohne Strecke ist m = 0 (z. B. „Dehnen 5 min“). */
+function trainingEigeneZeile(zeile){
+  let t = String(zeile || "").trim();
+  if (!t) return null;
+  let pause = 0;
+  const p = t.match(/\|\s*Pause\s+(\d+(?:[.,]\d+)?)\s*(min|s|sek)?\s*$/i);
+  if (p){
+    const w = parseFloat(p[1].replace(",", "."));
+    pause = Math.round(/^s/i.test(p[2] || "min") ? w : w * 60);
+    t = t.slice(0, p.index).trim();
+  }
+  let teil = "";
+  const k = t.match(/^([^:\d|]+):\s*(.*)$/);
+  if (k){ teil = k[1].trim(); t = k[2].trim(); }
+  let wdh = 1;
+  const w = t.match(/^(\d+)\s*[x×]\s+(.*)$/i);
+  if (w){ wdh = parseInt(w[1], 10); t = w[2].trim(); }
+  let m = 0;
+  const d = t.match(/(?:(\d+)\s*[x×]\s*)?(\d+(?:[.,]\d+)?)\s*(km|m)\b/i);
+  if (d) m = Math.round((d[1] ? parseInt(d[1], 10) : 1) * parseFloat(d[2].replace(",", ".")) * (/^km$/i.test(d[3]) ? 1000 : 1));
+  return {teil, wdh, text:t, m, pause};
+}
+function trainingEigenesLesen(text){
+  const zeilen = String(text || "").split(/\r?\n/).map(trainingEigeneZeile).filter(Boolean);
+  return {zeilen, meter:zeilen.reduce((a, z) => a + z.wdh * z.m, 0)};
+}
+/** Ablauf eines eigenen Trainings: je Wiederholung ein Schritt, Pause nach jeder Serie (nicht am Schluss). */
+function trainingEigenSchritte(e){
+  const s = [];
+  e.zeilen.forEach(z => {
+    for (let r = 1; r <= z.wdh; r++){
+      s.push({typ:"strecke", n:z.text, teil:z.teil, m:z.m, satzNr:r, von:z.wdh, sek:null});
+      if (z.pause) s.push({typ:"pause", n:"Pause", sek:z.pause});
+    }
+  });
+  while (s.length && s[s.length - 1].typ === "pause") s.pop();
+  return s;
+}
+
+/** Ein absolviertes Training als Zeile für tag.akt — dieselbe Form wie eine von Hand erfasste Aktivität.
+    Minuten gemessen (nie 0), bei Distanzsportarten die Strecke: dann rechnet trainingKcal() daraus. */
+function trainingEintrag(t, sekunden, distanz){
+  return {art:t.art, min:Math.max(1, Math.round((zahl(sekunden) || 0) / 60)),
+          dist:zahl(distanz) ? zahl(distanz) : "", hm:"", tr:t.n};
+}
+
+/** Für die Übungsliste: je Gruppe die Übungen mit Schwierigkeit, leicht → schwer. */
+function trainingUebungsliste(){
+  return Object.keys(CONFIG.uebKetten).map(g => ({g, n:CONFIG.uebGruppen[g] || g,
+    uebungen:CONFIG.uebKetten[g].map(x => Object.assign({id:x[0], l:x[1]}, CONFIG.uebungen[x[0]]))}));
+}
+
+
 /* ============================================================================
    Schicht 4 — die Diagramme
    Selbst gezeichnetes SVG, keine Bibliothek: die Anwendung muss offline in
@@ -2892,10 +3498,12 @@ function stateVorgabe(){
     cortanaCids:[],            // jede je aus Cortana uebernommene Zeile, siehe cortanaPruefen()
     tage:[],
     ansicht:{zeitraum:60},
+    // Training (1.12.0): Plan, Stufen, Bestwerte, eigene Trainings — je Person, reist mit dem Abgleich
+    training:trainingVorgabe(),
   };
 }
 
-const VERSION = "1.11.3";
+const VERSION = "1.12.0";
 
 let STATE = stateVorgabe();
 /* Naehrwerte: am PC aus naehrwerte.js neben der Datei, in der App ueber die Webadresse vom Server
@@ -2983,8 +3591,9 @@ function lsSchreiben(){ try { localStorage.setItem(LS_KEY, JSON.stringify(protok
 function schnapp(){
   // Eigene Produkte und Cortana-Kennungen gehoeren dazu: aendern sie sich
   // allein (Produkt angelegt, Zeile abgewaehlt), ist die Datei auch nicht mehr aktuell.
+  // Ebenso das Training (1.12.0): Plan, Stufen, Bestwerte, eigene Trainings.
   return JSON.stringify({p:STATE.person, z:STATE.ziel, t:STATE.tage,
-                         a:STATE.aktArten, n:STATE.meta.name, e:STATE.eigeneLm, c:STATE.cortanaCids});
+                         a:STATE.aktArten, n:STATE.meta.name, e:STATE.eigeneLm, c:STATE.cortanaCids, tr:STATE.training});
 }
 function isDirty(){ return schnapp() !== schnappschuss; }
 
@@ -4437,6 +5046,7 @@ function neu(){
     kennzahlen(); koerperZeichnen(); fastenZeichnen(); diagrammeZeichnen();
     belastungZeichnen(); leistungZeichnen(); wochenZeichnen(); dirtyAnzeigen();
     corHinweisZeichnen();
+    if (document.body.dataset.bereich === "training" && !trW) trainingZeichnen();
     autoPlanen();
   });
 }
@@ -5053,8 +5663,520 @@ function menueOeffnen(){
 function tabSetzen(t){
   document.body.dataset.tab = t;
   document.querySelectorAll("#handyTabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  // Training ist ein eigener Bereich; die übrigen Tabs gehören zum Protokoll
+  bereichSetzen(t === "training" ? "training" : "protokoll");
   window.scrollTo(0, 0);
   if (t === "verlauf") diagrammeZeichnen();     // waren unsichtbar und ohne Breite gezeichnet
+}
+
+/* ---------------- Training (1.12.0) ----------------
+   Eigener Bereich (am PC Tabs oben, am Handy der Tab „Training“). Gerechnet wird in Schicht 3
+   (trainingTag, trainingSchritte, doppelZaehlen, trainingEigenesLesen, trainingEintrag); hier nur
+   Zeichnen, Ablauf im Vollbild und das Eintragen in den Tag. */
+const WT_KURZ = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+let trTag = (new Date().getDay() + 6) % 7;     // gewählter Wochentag, 0 = Montag
+const mmss = s => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+
+function bereichSetzen(b){
+  document.body.dataset.bereich = b;
+  document.querySelectorAll("#bereichTabs button").forEach(x => x.classList.toggle("on", x.dataset.bereich === b));
+  if (b === "training") trainingZeichnen();
+  window.scrollTo(0, 0);
+}
+function trPlan(){ return STATE.training.plan; }
+function trExtra(){ return {stufeDelta:STATE.training.stufeDelta, coach:STATE.training.coach}; }
+function trGewicht(){ return letztesGewicht(); }
+function trKcal(art, min, dist){
+  const g = trGewicht();
+  return g ? trainingKcal(art, min, g, STATE.aktArten.some(a => a.id === art) ? STATE.aktArten : CONFIG.training, dist) : null;
+}
+function trArtName(id){
+  const a = STATE.aktArten.find(x => x.id === id) || CONFIG.training.find(x => x.id === id);
+  return a ? a.name : id;
+}
+function trAenderung(){ trainingZeichnen(); neu(); }
+
+function trChips(id, titel, optionen, istAn, klick){
+  const el = $(id);
+  el.innerHTML = '<span class="lbl">' + titel + '</span>' + optionen.map(([w, n, aus]) =>
+    '<button type="button" data-w="' + esc(String(w)) + '"' + (istAn(w) ? ' class="on"' : '') + (aus ? " disabled" : "") + '>' + esc(n) + '</button>').join("");
+  el.querySelectorAll("button").forEach((b, i) => b.onclick = () => { klick(optionen[i][0]); trAenderung(); });
+}
+const trUmschalten = (liste, w) => liste.indexOf(w) >= 0 ? liste.filter(x => x !== w) : liste.concat(w);
+
+function trainingZeichnen(){
+  if (!STATE.training) return;
+  const p = trPlan(), m = trainingModus(p);
+  trChips("trZiel", "Ziel", Object.keys(CONFIG.trainingZiele).map(k => [k, CONFIG.trainingZiele[k].n]),
+          w => p.ziel === w, w => { p.ziel = w; STATE.training.stufeDelta = {}; });
+  trChips("trModus", "Form", CONFIG.trainingModi.map(([k, n]) => [k, n, p.ziel === "mobil" || (p.ziel === "kond" && (k === "saetze" || k === "doppel"))]),
+          w => p.ziel !== "mobil" && m === w, w => { p.modus = w; });
+  trChips("trStufe", "Stufe", CONFIG.trainingStufen.map(s => [s.id, s.n]), w => p.stufe === w,
+          w => { p.stufe = w; STATE.training.stufeDelta = {}; STATE.training.coach = 0; });
+  trChips("trTage", "Tage", WT_KURZ.map((t, i) => [i, t]), w => p.tage.indexOf(w) >= 0,
+          w => { const n = trUmschalten(p.tage, w); if (n.length) p.tage = n.sort((a, b) => a - b); });
+  trChips("trDauer", "Dauer", CONFIG.trainingDauern.map(d => [d, d + " min"]), w => p.dauer === w, w => { p.dauer = w; });
+  trChips("trAus", "Ausrüstung", CONFIG.trainingAusruestung.map(([k, n]) => [k, n, k === "kg"]), w => p.aus.indexOf(w) >= 0,
+          w => { if (w !== "kg") p.aus = trUmschalten(p.aus, w); });
+  $("trPlanHint").textContent = CONFIG.trainingZiele[p.ziel].n + " · " + (CONFIG.trainingModi.find(x => x[0] === m) || ["", "Beweglichkeit"])[1]
+    + " · " + CONFIG.trainingStufen.find(s => s.id === p.stufe).n + " · " + p.tage.length + "× " + p.dauer + " min";
+
+  // Woche
+  const woche = trainingWoche(p), daten = trainingWocheDaten(heute()), hw = (new Date().getDay() + 6) % 7;
+  let h = "", summe = 0;
+  woche.forEach((v, t) => {
+    const tr = v ? trainingTag(p, v, trExtra()) : null;
+    const erl = STATE.training.erledigt[daten[t]];
+    if (tr) summe += tr.dauer;
+    h += '<button type="button" class="trtag' + (v ? "" : " ruhe") + (t === trTag ? " akt" : "") + (t === hw ? " heute" : "")
+      + '" data-t="' + t + '"><span class="wt">' + WT_KURZ[t] + '</span><span class="tn">' + (tr ? esc(tr.n) : "Ruhetag") + '</span>'
+      + (tr ? '<span class="td">' + tr.dauer + ' min' + (trKcal(tr.art, tr.dauer) ? ' · ' + fmt(trKcal(tr.art, tr.dauer), 0) + ' kcal' : '') + '</span>' : '')
+      + (erl ? '<span class="td ok">erledigt ✓ ' + esc(erl.n || "") + '</span>' : '') + '</button>';
+  });
+  $("trWoche").innerHTML = h;
+  $("trWoche").querySelectorAll(".trtag").forEach(b => b.onclick = () => { trTag = +b.dataset.t; trainingZeichnen(); });
+  $("trWocheHint").textContent = p.tage.length + " Trainings · " + summe + " min";
+
+  // gewählter Tag
+  const v = woche[trTag];
+  $("trTagTitel").textContent = (trTag === hw ? "Heute" : WT_KURZ[trTag]) + (v ? " · " + CONFIG.trainingVorlagen[v].n : "");
+  const box = $("trUebersicht");
+  if (!v){
+    $("trTagHint").textContent = ""; $("trSumme").textContent = ""; $("trStarten").disabled = true;
+    box.innerHTML = '<p class="explain">Ruhetag. Erholung gehört zum Plan — Muskeln wachsen zwischen den Trainings. '
+      + 'Ein Spaziergang zählt wie immer als Aktivität im Tag; ein eigenes Training (unten) geht auch.</p>';
+  } else {
+    const tr = trainingTag(p, v, trExtra());
+    $("trStarten").disabled = false;
+    $("trTagHint").textContent = CONFIG.trainingZiele[p.ziel].n;
+    const kc = trKcal(tr.art, tr.dauer);
+    $("trSumme").textContent = "ca. " + tr.dauer + " min" + (kc ? " · " + fmt(kc, 0) + " kcal netto" : "") + " · " + tr.liste.length + " Übungen";
+    box.innerHTML = trUebersichtHtml(tr, v);
+    box.querySelectorAll("button[data-s]").forEach(b => b.onclick = () => {
+      const sd = STATE.training.stufeDelta;
+      sd[b.dataset.s] = (zahl(sd[b.dataset.s]) || 0) + (+b.dataset.d);
+      if (!sd[b.dataset.s]) delete sd[b.dataset.s];
+      trAenderung();
+    });
+  }
+  trEigeneZeichnen();
+  trUebungslisteZeichnen();
+}
+
+function trUebersichtHtml(tr, v){
+  let h = '<div class="trteil">Aufwärmen · ' + Math.round(tr.auf / 60) + ' min</div>';
+  h += tr.modus === "zeit"
+      ? '<div class="trteil">Hauptteil · ' + (tr.liste[0] ? tr.liste[0].saetze : 0) + ' Runden auf Zeit</div><p class="explain">Alle Übungen nacheinander, '
+        + 'dann von vorn — so schnell, wie es sauber geht. ' + (STATE.training.best[v] ? 'Bestzeit: <b>' + mmss(STATE.training.best[v]) + '</b>' : 'Noch keine Bestzeit.') + '</p>'
+    : tr.modus === "intervall" ? '<div class="trteil">Hauptteil · Intervalle 40 s / 20 s</div>'
+    : tr.modus === "doppel" ? '<div class="trteil">Hauptteil · Doppel-Up</div><p class="explain">Je Übung: einmal so viele wie möglich, '
+        + 'dann die doppelte Menge in so wenigen Sätzen wie möglich.</p>'
+    : '<div class="trteil">Hauptteil</div>';
+  for (const u of tr.liste){
+    const d = STATE.training.doppel[u.id], sek = u.art === "sek";
+    const vg = tr.modus === "doppel" ? (d ? "zuletzt " + d.max + (sek ? " s" : "") + " → " + 2 * d.max + " in " + d.saetze + " Sätzen" : "Maximum, dann doppelt")
+      : tr.modus === "zeit" ? u.wert + (sek ? " s" : " Wdh") + " je Runde"
+      : u.saetze + " × " + u.wert + (sek ? " s" : " Wdh") + (u.pause ? " · Pause " + u.pause + " s" : "");
+    const stufe = u.g !== "mobil" && u.g !== "kond";
+    // die Schwierigkeit 0–5 wie in der Übungsliste — die Stelle in der Kette hinge an der Ausrüstung
+    const l = (CONFIG.uebKetten[u.g].find(x => x[0] === u.id) || [0, 0])[1];
+    h += '<div class="trueb"><span class="n">' + esc(u.n) + '<small>' + (stufe ? "Schwierigkeit " + l + "/5" : "") + '</small></span>'
+      + '<span class="vg">' + vg + '</span>'
+      + (stufe ? '<div class="stufe"><button type="button" class="btn mini" data-s="' + u.schluessel + '" data-d="-1"' + (u.idx === 0 ? " disabled" : "")
+          + '>▼ leichter</button><button type="button" class="btn mini" data-s="' + u.schluessel + '" data-d="1"'
+          + (u.idx === u.kette.length - 1 ? " disabled" : "") + '>▲ schwerer</button></div>' : "")
+      + '<details><summary>So geht es</summary>' + esc(CONFIG.uebungen[u.id].tipp)
+      + (stufe ? '<div class="kette">Stufen: ' + u.kette.map((id, i) => i === u.idx ? "<b>" + esc(CONFIG.uebungen[id].n) + "</b>" : esc(CONFIG.uebungen[id].n)).join(" → ") + '</div>' : "")
+      + '</details></div>';
+  }
+  if (tr.finisher) h += '<div class="trteil">Finisher · 4 min</div><p class="explain">' + esc(tr.finisher.text) + '</p>';
+  if (tr.ab) h += '<div class="trteil">Abkühlen · ' + Math.round(tr.ab / 60) + ' min</div>';
+  if (trainingZuKurz(tr, trPlan().dauer))
+    h += '<p class="explain" style="color:var(--warn-ink)">Für ' + trPlan().dauer + ' min reichen die Übungen '
+      + (tr.modus === "zeit" ? "auf Zeit (gedacht bis 30 min)" : "mit dieser Ausrüstung") + ' nur für ca. ' + tr.dauer
+      + ' min. Mehr Übungen gibt es mit Stuhl/Bank, Gummiband, Hanteln oder Fitnessstudio — oder „Sätze &amp; Pausen“ wählen.</p>';
+  if (tr.modus === "saetze")
+    h += '<p class="explain">Steigern: Schaffst du in allen Sätzen mehr als vorgegeben, sag nach dem Training „zu leicht“ — '
+      + 'dann kommt beim nächsten Mal die schwerere Stufe. Einzelne Übungen stellst du mit ▲▼ selbst.</p>';
+  return h;
+}
+
+/* ---- Eigene Trainings ---- */
+function trEigeneZeichnen(){
+  const eig = STATE.training.eigene;
+  const vorlagen = CONFIG.trainingEigeneVorlagen.filter(v => !eig.some(e => e.id === v.id));
+  let h = eig.length ? "" : '<p class="explain">Noch kein eigenes Training. Eine Zeile je Strecke oder Übung — die Strecke zählt für die kcal.</p>';
+  for (const e of eig){
+    const l = trainingEigenesLesen(e.text);
+    const kc = l.meter ? trKcal(e.art, "", l.meter) : null;
+    h += '<div class="treigen" data-id="' + esc(e.id) + '"><span class="n">' + esc(e.n) + '</span>'
+      + '<span class="explain">' + esc(trArtName(e.art)) + (l.meter ? " · " + fmt(l.meter, 0) + " m" : "") + (kc ? " · ca. " + fmt(kc, 0) + " kcal" : "") + '</span>'
+      + '<button type="button" class="btn mini" data-a="bearb">Bearbeiten</button>'
+      + '<button type="button" class="btn mini" data-a="ohne">Ohne Ablauf eintragen</button>'
+      + '<button type="button" class="btn primary" data-a="start">▶ Starten</button>'
+      + '<div class="z">' + esc(l.zeilen.map(z => (z.teil ? z.teil + ": " : "") + (z.wdh > 1 ? z.wdh + "× " : "") + z.text).join("\n")) + '</div></div>';
+  }
+  h += '<div class="chips">' + vorlagen.map(v => '<button type="button" data-v="' + esc(v.id) + '">Vorlage: ' + esc(v.n) + '</button>').join("")
+    + '<button type="button" data-v="">+ Eigenes Training</button></div>';
+  const box = $("trEigene");
+  box.innerHTML = h;
+  box.querySelectorAll(".treigen").forEach(k => k.querySelectorAll("button").forEach(b => b.onclick = () => {
+    const e = eig.find(x => x.id === k.dataset.id);
+    if (b.dataset.a === "bearb") trEigenBearbeiten(e);
+    else if (b.dataset.a === "start") trStarten({eigen:e});
+    else trEigenOhneAblauf(e);
+  }));
+  box.querySelectorAll("button[data-v]").forEach(b => b.onclick = () => {
+    const v = CONFIG.trainingEigeneVorlagen.find(x => x.id === b.dataset.v);
+    if (v){ eig.push(JSON.parse(JSON.stringify(v))); trAenderung(); }
+    else trEigenBearbeiten(null);
+  });
+}
+function trEigenBearbeiten(e){
+  const dlg = $("dlgEigen");
+  $("eigTrName").value = e ? e.n : "";
+  $("eigTrArt").innerHTML = STATE.aktArten.filter(a => a.id).map(a => '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>').join("");
+  $("eigTrArt").value = e ? e.art : "schwimm";
+  $("eigTrText").value = e ? e.text : "";
+  $("eigTrLoeschen").hidden = !e;
+  const vorschau = () => {
+    const l = trainingEigenesLesen($("eigTrText").value);
+    const s = trainingEigenSchritte(l);
+    $("eigTrVorschau").textContent = l.zeilen.length ? s.filter(x => x.typ === "strecke").length + " Schritte"
+      + (l.meter ? " · " + fmt(l.meter, 0) + " m" : " · keine Strecke erkannt (kcal dann aus den Minuten)")
+      + (s.some(x => x.typ === "pause") ? " · " + s.filter(x => x.typ === "pause").length + " Pausen" : "") : "Noch keine Zeile.";
+  };
+  $("eigTrText").oninput = vorschau; vorschau();
+  $("eigTrAbbruch").onclick = () => dlg.close();
+  $("eigTrOk").onclick = () => {
+    const n = $("eigTrName").value.trim(), text = $("eigTrText").value.trim();
+    if (!n || !text){ melden("Name und Ablauf fehlen", "Gib dem Training einen Namen und mindestens eine Zeile."); return; }
+    if (e){ e.n = n; e.art = $("eigTrArt").value; e.text = text; }
+    else STATE.training.eigene.push({id:"e" + zufallsId(), n, art:$("eigTrArt").value, text});
+    dlg.close(); trAenderung();
+  };
+  $("eigTrLoeschen").onclick = async () => {
+    dlg.close();
+    if (await frage("Eigenes Training löschen", "„" + e.n + "“ löschen? Eingetragene Tage bleiben, wie sie sind.")){
+      STATE.training.eigene = STATE.training.eigene.filter(x => x !== e); trAenderung();
+    }
+  };
+  dlg.showModal();
+}
+async function trEigenOhneAblauf(e){
+  // Am Becken liegt das Handy oft im Kasten: das Training einfach eintragen, die Strecke zählt
+  const l = trainingEigenesLesen(e.text);
+  let min = "";
+  if (!l.meter){
+    const w = await frage("Wie lange?", "Dauer in Minuten für „" + e.n + "“:", "45");
+    if (w === null || !zahl(w)) return;
+    min = zahl(w);
+  }
+  trEintragen({art:e.art, n:e.n, id:e.id}, min ? min * 60 : null, l.meter || null, min === "" ? "" : null);
+}
+
+/* ---- Übungsliste ---- */
+function trUebungslisteZeichnen(){
+  const p = trPlan(), da = trainingVorhanden(p);
+  const such = normText($("trSuche").value || ""), nur = $("trNurMeine").checked;
+  const hat = u => !u.aus || u.aus.some(a => da.indexOf(a) >= 0);
+  const name = k => (CONFIG.trainingAusruestung.find(a => a[0] === k) || [k, k])[1];
+  let n = 0, h = "";
+  for (const g of trainingUebungsliste()){
+    const liste = g.uebungen.filter(u => (!such || normText(u.n + " " + u.tipp).indexOf(such) >= 0) && (!nur || hat(u)));
+    if (!liste.length) continue;
+    n += liste.length;
+    h += '<div class="trgruppe"><h3>' + esc(g.n) + '</h3><div class="trlist">' + liste.map(u =>
+      '<div class="e' + (hat(u) ? "" : " fehlt") + '"><div class="k"><b>' + esc(u.n) + '</b><span class="s">Schwierigkeit ' + u.l + '/5 · '
+      + (u.art === "sek" ? "Sekunden" : "Wiederholungen") + '</span></div><div class="t">' + esc(u.tipp) + '</div>'
+      + '<div class="a">' + (u.aus ? u.aus.map(name).join(" oder ") : "Körpergewicht") + '</div></div>').join("") + '</div></div>';
+  }
+  $("trUebungen").innerHTML = h || '<p class="explain">Keine Übung gefunden.</p>';
+  $("trListeHint").textContent = Object.keys(CONFIG.uebungen).length + " Übungen" + (such || nur ? " · " + n + " angezeigt" : "");
+}
+
+/* ---- Eintragen ---- */
+/** Ein Training als Aktivität in den heutigen Tag. Die Art wird angelegt, wenn sie in einem älteren
+    Protokoll fehlt (Zirkeltraining, Beweglichkeit kamen mit 1.12.0). */
+function trEintragen(t, sekunden, distanz, minLeer){
+  if (!STATE.aktArten.some(a => a.id === t.art)){
+    const v = CONFIG.training.find(a => a.id === t.art);
+    if (v) STATE.aktArten.push(JSON.parse(JSON.stringify(v)));
+  }
+  const d = heute();
+  let tag = STATE.tage.find(x => x.d === d);
+  if (!tag){ const merk = gewaehlterTag; gewaehlterTag = d; tag = tagSichern(); gewaehlterTag = merk; }
+  const z = trainingEintrag(t, sekunden, distanz);
+  if (minLeer === "") z.min = "";            // ohne Ablauf mit Strecke: die Dauer folgt aus der Strecke
+  tag.akt.push(z);
+  STATE.training.erledigt[d] = {v:t.v || t.id || "", n:t.n, min:z.min};
+  if (typeof aktArtenZeichnen === "function") aktArtenZeichnen();
+  tagEditorZeichnen(); tabelleZeichnen(); trAenderung();
+  const kc = trKcal(z.art, z.min, z.dist);
+  melden("Im Tag eingetragen", trArtName(z.art) + " · " + t.n + ": " + (z.min ? z.min + " min" : "") + (z.dist ? (z.min ? ", " : "") + fmt(z.dist, 0) + " m" : "")
+    + (kc ? ", " + fmt(kc, 0) + " kcal netto" : "") + ". Es steht heute unter Aktivitäten.");
+}
+
+/* ---- Ablauf im Vollbild ----
+   Zeiten über Date.now(), nicht über gezählte Ticks: geht das Handy kurz in den Hintergrund, stimmt die
+   Uhr trotzdem. Der Bildschirm bleibt an (Wake Lock), Ton und Vibration am Ende jeder Pause. */
+let trW = null;
+function trTon(hoch){
+  try {
+    if (!trW.audio) trW.audio = new (window.AudioContext || window.webkitAudioContext)();
+    const o = trW.audio.createOscillator(), g = trW.audio.createGain();
+    o.frequency.value = hoch ? 1046 : 660; g.gain.value = .12;
+    o.connect(g); g.connect(trW.audio.destination); o.start(); o.stop(trW.audio.currentTime + (hoch ? .35 : .12));
+  } catch(e){}
+  if (hoch && navigator.vibrate) try { navigator.vibrate(250); } catch(e){}
+}
+async function trBildschirm(an){
+  try {
+    if (an && navigator.wakeLock) trW.lock = await navigator.wakeLock.request("screen");
+    else if (!an && trW && trW.lock){ await trW.lock.release(); trW.lock = null; }
+  } catch(e){}
+}
+function trStarten(quelle){
+  let liste, info;
+  if (quelle && quelle.eigen){
+    const l = trainingEigenesLesen(quelle.eigen.text);
+    liste = trainingEigenSchritte(l);
+    info = {art:quelle.eigen.art, n:quelle.eigen.n, id:quelle.eigen.id, meter:l.meter, eigen:true};
+  } else {
+    const v = trainingWoche(trPlan())[trTag];
+    if (!v) return;
+    const tr = trainingTag(trPlan(), v, trExtra());
+    liste = trainingSchritte(tr);
+    info = {art:tr.art, n:tr.n, v, tr};
+  }
+  if (!liste.length){ melden("Nichts zu tun", "Dieses Training hat noch keine Schritte."); return; }
+  trW = {info, liste, i:0, start:Date.now(), seit:Date.now(), plus:0, zeitStart:null, zeitEnde:null, ton:null, ende:false, d:null, ergebnisse:[]};
+  $("wiz").hidden = false; document.body.classList.add("wiz-offen");
+  trBildschirm(true);
+  trW.tick = setInterval(trTick, 200);
+  trZeichnenSchritt();
+}
+const trSchritt = () => trW.liste[trW.i];
+function trWeiter(){
+  const s = trSchritt();
+  if (s && s.typ === "satz" && s.runde && trW.zeitStart === null) trW.zeitStart = trW.seit;
+  trW.i++; trW.seit = Date.now(); trW.plus = 0; trW.ton = null;
+  const n = trSchritt();
+  if (s && s.typ === "satz" && s.runde && (!n || !n.runde)) trW.zeitEnde = Date.now();
+  if (!n){ trEnde(false); return; }
+  if (n.typ === "satz" && n.runde && trW.zeitStart === null) trW.zeitStart = Date.now();
+  trZeichnenSchritt();
+}
+function trCountdown(rest){
+  $("wUhr").textContent = mmss(rest);
+  if (rest <= 3 && rest > 0 && trW.ton !== rest){ trW.ton = rest; trTon(false); }
+  return rest <= 0;
+}
+function trTick(){
+  if (!trW || trW.ende) return;
+  $("wGesamt").textContent = mmss((Date.now() - trW.start) / 1000);
+  const s = trSchritt();
+  if (s.typ === "doppel"){ trDoppelTick(); return; }
+  if (s.sek === null){        // Wiederholungen oder Strecke: die Uhr läuft vorwärts, bis „Fertig“
+    $("wUhr").textContent = mmss((Date.now() - (s.runde ? trW.zeitStart : trW.seit)) / 1000);
+    return;
+  }
+  if (trCountdown(Math.ceil(s.sek + trW.plus - (Date.now() - trW.seit) / 1000))){ trTon(true); trWeiter(); }
+}
+function trZeichnenSchritt(){
+  const s = trSchritt();
+  $("wBalken").style.width = Math.round(trW.i / trW.liste.length * 100) + "%";
+  const naechster = trW.liste.slice(trW.i + 1).find(x => x.typ === "satz" || x.typ === "strecke" || x.typ === "doppel");
+  $("wArt").className = "wart" + (s.typ === "pause" ? " pause" : "");
+  $("wUhr").className = "wuhr" + (s.typ === "pause" ? " pause" : "");
+  $("wWeiter").textContent = "";
+  if (s.typ === "doppel"){
+    if (!trW.d || trW.d.id !== s.id) trW.d = {id:s.id, phase:"max", z:doppelStart(), start:Date.now(), pauseBis:null};
+    trDoppelZeichnen(s);
+    return;
+  }
+  const knopf = (text, gruen) => { $("wFuss").innerHTML = '<button type="button" class="btn ' + (gruen ? "gruen" : "primary") + '" id="wFertig">' + text + '</button>'; };
+  if (s.typ === "satz"){
+    const u = CONFIG.uebungen[s.id];
+    $("wArt").textContent = s.runde ? "Runde " + s.satzNr + " von " + s.von + " · auf Zeit" : "Satz " + s.satzNr + " von " + s.von;
+    $("wName").textContent = s.n;
+    $("wZiel").textContent = s.ziel + (trW.info.tr && trW.info.tr.modus === "intervall" ? " arbeiten" : "");
+    $("wText").innerHTML = (trainingIstGeraet(s.id) ? "Gewicht so wählen, dass die letzten 2 Wiederholungen schwer, aber sauber sind.<br>" : "")
+      + '<details><summary>So geht es</summary>' + esc(u.tipp) + '</details>';
+    $("wWeiter").textContent = !naechster ? "Letzte Übung"
+      : naechster.id === s.id && !s.runde ? "Danach: Pause, dann Satz " + naechster.satzNr + " von " + naechster.von
+      : "Danach: " + naechster.n;
+    knopf(s.sek === null ? "Fertig ✓" : "Fertig, weiter ✓");
+  } else if (s.typ === "strecke"){
+    $("wArt").textContent = (s.teil || "Strecke") + (s.von > 1 ? " · " + s.satzNr + " von " + s.von : "");
+    $("wName").textContent = s.n;
+    $("wZiel").textContent = s.m ? fmt(s.m, 0) + " m" : "";
+    $("wText").textContent = "";
+    $("wWeiter").textContent = naechster ? "Danach: " + naechster.n : "Letzter Teil";
+    knopf("Fertig ✓");
+  } else if (s.typ === "pause"){
+    $("wArt").textContent = "Pause";
+    $("wName").textContent = "Durchatmen";
+    $("wZiel").textContent = "";
+    $("wText").textContent = "";
+    const nd = trW.liste[trW.i + 1];
+    $("wWeiter").textContent = nd && nd.typ === "doppel" ? "Als Nächstes: " + nd.n + " · Doppel-Up"
+      : naechster ? "Als Nächstes: " + naechster.n + (naechster.von > 1 ? " · " + (naechster.runde ? "Runde " : "") + naechster.satzNr + "/" + naechster.von : "")
+        + (naechster.ziel ? " · " + naechster.ziel : naechster.m ? " · " + naechster.m + " m" : "") : "";
+    $("wFuss").innerHTML = '<button type="button" class="btn" id="wPlus">+15 s</button><button type="button" class="btn primary" id="wFertig">Weiter ▶</button>';
+    $("wPlus").onclick = () => { trW.plus += 15; trTick(); };
+  } else {
+    $("wArt").textContent = s.n === "Aufwärmen" ? "Los geht es" : s.n === "Abkühlen" ? "Fast geschafft" : "Zum Schluss";
+    $("wName").textContent = s.n;
+    $("wZiel").textContent = "";
+    $("wText").textContent = s.text;
+    $("wWeiter").textContent = naechster ? "Danach: " + naechster.n : "";
+    knopf("Weiter ▶");
+  }
+  $("wFertig").onclick = () => { trTon(false); trWeiter(); };
+  trTick();
+}
+
+/* Doppel-Up im Ablauf: Maximum → Anzahl → Pause → Satz → Anzahl → … bis die doppelte Menge erreicht ist.
+   Halteübungen misst die Uhr selbst. Gerechnet wird mit doppelZaehlen() (Schicht 3). */
+function trDoppelSek(){ return Math.round((Date.now() - trW.d.start) / 1000); }
+function trDoppelZaehlen(n){
+  const d = trW.d;
+  d.z = doppelZaehlen(d.z, n);
+  if (d.z.fertig){ d.phase = "fertig"; }
+  else { d.phase = "pause"; d.pauseBis = Date.now() + CONFIG.doppelPause * 1000; trW.ton = null; }
+  trDoppelZeichnen(trSchritt());
+}
+function trDoppelTick(){
+  const d = trW.d; if (!d) return;
+  if (d.phase === "max" || d.phase === "satz") $("wUhr").textContent = mmss(trDoppelSek());
+  else if (d.phase === "pause" && trCountdown(Math.ceil((d.pauseBis - Date.now()) / 1000))){
+    trTon(true); d.phase = "satz"; d.start = Date.now(); trDoppelZeichnen(trSchritt());
+  }
+}
+function trDoppelZeichnen(s){
+  const d = trW.d, z = d.z, u = CONFIG.uebungen[s.id], sek = u.art === "sek", e = sek ? " s" : "";
+  const vorher = STATE.training.doppel[s.id];
+  $("wArt").className = "wart" + (d.phase === "pause" ? " pause" : "");
+  $("wUhr").className = "wuhr" + (d.phase === "pause" ? " pause" : "");
+  $("wName").textContent = u.n;
+  $("wWeiter").textContent = "";
+  // Marco: „so sieht man wie viele man noch machen muss und in wie vielen sätzen es getan wurde“
+  const bisher = () => z.liste.length ? "Bisher: " + z.liste.join(" + ") + " = " + z.liste.reduce((a, b) => a + b, 0) + e
+    + " in " + z.liste.length + (z.liste.length === 1 ? " Satz" : " Sätzen") : "";
+  const eingabe = (titel, vorschlag) => {
+    $("wZiel").textContent = titel;
+    $("wUhr").innerHTML = '<input class="wzahl" id="wZahl" type="number" inputmode="numeric" min="0" value="' + vorschlag + '" aria-label="' + esc(titel) + '">';
+    $("wFuss").innerHTML = '<button type="button" class="btn" id="wMinus">−</button><button type="button" class="btn" id="wPlus1">+</button>'
+      + '<button type="button" class="btn primary" id="wOk">Weiter ▶</button>';
+    const f = $("wZahl");
+    $("wMinus").onclick = () => { f.value = Math.max(0, (zahl(f.value) || 0) - 1); };
+    $("wPlus1").onclick = () => { f.value = (zahl(f.value) || 0) + 1; };
+    $("wOk").onclick = () => trDoppelZaehlen(zahl(f.value) || 0);
+  };
+  const fertigKnopf = fn => { $("wFuss").innerHTML = '<button type="button" class="btn primary" id="wFertig">Fertig ✓</button>'; $("wFertig").onclick = fn; };
+  if (d.phase === "max"){
+    $("wArt").textContent = "Doppel-Up · Durchgang 1";
+    $("wZiel").textContent = sek ? "So lange wie möglich" : "So viele wie möglich";
+    $("wText").innerHTML = (vorher ? "Zuletzt: " + vorher.max + e + ". " : "") + '<details><summary>So geht es</summary>' + esc(u.tipp) + '</details>';
+    $("wWeiter").textContent = "Danach: die doppelte Menge in möglichst wenigen Sätzen";
+    fertigKnopf(() => { trTon(false); if (sek) trDoppelZaehlen(trDoppelSek()); else { d.phase = "zahl"; trDoppelZeichnen(s); } });
+    trDoppelTick();
+  } else if (d.phase === "zahl"){
+    $("wArt").textContent = "Doppel-Up · Durchgang 1";
+    $("wText").textContent = "Danach holst du die doppelte Menge nach.";
+    eingabe("Wie viele waren es?", vorher ? vorher.max : 10);
+  } else if (d.phase === "pause"){
+    $("wArt").textContent = "Pause";
+    $("wZiel").textContent = "Noch " + z.rest + (sek ? " s" : " Wdh") + " von " + 2 * z.max + e;
+    $("wText").textContent = z.liste.length ? bisher() : "Ziel: " + 2 * z.max + e + " in so wenigen Sätzen wie möglich";
+    $("wWeiter").textContent = "Als Nächstes: Satz " + (z.liste.length + 1);
+    $("wFuss").innerHTML = '<button type="button" class="btn" id="wPlus">+15 s</button><button type="button" class="btn primary" id="wFertig">Weiter ▶</button>';
+    $("wPlus").onclick = () => { d.pauseBis += 15000; trDoppelTick(); };
+    $("wFertig").onclick = () => { trTon(false); d.phase = "satz"; d.start = Date.now(); trDoppelZeichnen(s); };
+    trDoppelTick();
+  } else if (d.phase === "satz"){
+    $("wArt").textContent = "Doppel-Up · Satz " + (z.liste.length + 1);
+    $("wZiel").textContent = "Noch " + z.rest + (sek ? " s" : " Wdh");
+    $("wText").textContent = bisher() || "So viele, wie sauber gehen.";
+    fertigKnopf(() => { trTon(false); if (sek) trDoppelZaehlen(trDoppelSek()); else { d.phase = "zahlSatz"; trDoppelZeichnen(s); } });
+    trDoppelTick();
+  } else if (d.phase === "zahlSatz"){
+    $("wArt").textContent = "Doppel-Up · Satz " + (z.liste.length + 1);
+    $("wText").textContent = "Noch " + z.rest + " Wdh offen." + (bisher() ? " " + bisher() : "");
+    eingabe("Wie viele in diesem Satz?", Math.min(z.rest, z.liste.length ? z.liste[z.liste.length - 1] : z.max));
+  } else {
+    const besser = doppelBesser(z, vorher);
+    $("wArt").textContent = "Doppel-Up geschafft";
+    $("wZiel").textContent = z.max === 0 ? "Heute nicht gegangen" : 2 * z.max + e + (sek ? "" : " Wdh") + " in " + z.saetze + (z.saetze === 1 ? " Satz" : " Sätzen");
+    $("wUhr").textContent = z.max === 0 ? "" : z.max + e;
+    $("wText").textContent = (z.max ? "Durchgang 1: " + z.max + e + ". Nachgeholt: " + z.liste.join(" + ") + e + ". " : "")
+      + (vorher ? "Letztes Mal: " + vorher.max + e + " → " + 2 * vorher.max + e + " in " + vorher.saetze + " Sätzen. " + (besser ? "Besser als letztes Mal!" : "")
+                : "Das ist dein erster Wert.");
+    if (z.max && !d.gemerkt){
+      d.gemerkt = true;
+      trW.ergebnisse.push({id:s.id, max:z.max, saetze:z.saetze, text:u.n + ": " + z.max + " → " + 2 * z.max + " in " + z.saetze});
+    }
+    $("wFuss").innerHTML = '<button type="button" class="btn primary" id="wFertig">Weiter ▶</button>';
+    $("wFertig").onclick = () => { trW.d = null; trWeiter(); };
+  }
+}
+
+function trEnde(abgebrochen){
+  trW.ende = true; clearInterval(trW.tick); trBildschirm(false);
+  const sek = (Date.now() - trW.start) / 1000, info = trW.info;
+  const min = Math.max(1, Math.round(sek / 60));
+  const dist = info.eigen && !abgebrochen ? info.meter : null;
+  const kc = trKcal(info.art, min, dist);
+  let best = "";
+  if (info.tr && info.tr.modus === "zeit" && trW.zeitStart && trW.zeitEnde && !abgebrochen){
+    const z = Math.round((trW.zeitEnde - trW.zeitStart) / 1000), alt = STATE.training.best[info.v];
+    best = "Runden auf Zeit: " + mmss(z) + (!alt || z < alt ? " — neue Bestzeit!" : " · Bestzeit " + mmss(alt));
+    trW.bestzeit = z;
+  }
+  if (trW.ergebnisse.length) best = (best ? best + "<br>" : "") + "Doppel-Up: " + trW.ergebnisse.map(r => esc(r.text)).join(" · ") + " Sätzen";
+  $("wBalken").style.width = "100%";
+  $("wArt").className = "wart"; $("wUhr").className = "wuhr";
+  $("wArt").textContent = abgebrochen ? "Abgebrochen" : "Geschafft";
+  $("wName").textContent = info.n;
+  $("wZiel").textContent = mmss(sek) + (dist ? " · " + fmt(dist, 0) + " m" : "") + (kc ? " · " + fmt(kc, 0) + " kcal netto" : "");
+  $("wUhr").textContent = "";
+  $("wText").innerHTML = (best ? "<b>" + best + "</b><br>" : "") + (info.eigen ? "" : "Wie war es?");
+  $("wWeiter").textContent = "";
+  $("wFuss").innerHTML = (info.eigen ? "" : '<div class="wrueck"><button type="button" data-r="-1">zu schwer</button>'
+      + '<button type="button" data-r="0">passend</button><button type="button" data-r="1">zu leicht</button></div>')
+    + '<button type="button" class="btn" id="wVerwerfen">Nicht eintragen</button>'
+    + '<button type="button" class="btn gruen" id="wEintragen">In den Tag eintragen</button>';
+  let rueck = null;
+  $("wFuss").querySelectorAll(".wrueck button").forEach(b => b.onclick = () => {
+    rueck = +b.dataset.r;
+    $("wFuss").querySelectorAll(".wrueck button").forEach(x => x.classList.toggle("on", x === b));
+    $("wText").innerHTML = (best ? "<b>" + best + "</b><br>" : "") + (rueck > 0 ? "Nächstes Mal eine Stufe schwerer."
+      : rueck < 0 ? "Nächstes Mal eine Stufe leichter." : "So bleibt es.");
+  });
+  const schliessen = () => { $("wiz").hidden = true; document.body.classList.remove("wiz-offen"); trW = null; trainingZeichnen(); };
+  // Bestwerte und Doppel-Up gehören zum Training, auch wenn es nicht in den Tag soll
+  const merken = () => {
+    if (trW.bestzeit && (!STATE.training.best[info.v] || trW.bestzeit < STATE.training.best[info.v])) STATE.training.best[info.v] = trW.bestzeit;
+    for (const r of trW.ergebnisse) STATE.training.doppel[r.id] = {max:r.max, saetze:r.saetze};
+    if (rueck !== null) STATE.training.coach = Math.max(-3, Math.min(3, (zahl(STATE.training.coach) || 0) + rueck));
+  };
+  $("wVerwerfen").onclick = () => { merken(); schliessen(); neu(); };
+  $("wEintragen").onclick = () => { merken(); const t = {art:info.art, n:info.n, v:info.v, id:info.id}, s = sek; schliessen(); trEintragen(t, s, dist); };
+}
+/** Knöpfe der Trainingsseite und des Ablaufs, einmal beim Start. */
+function trainingVerbinden(){
+  document.querySelectorAll("#bereichTabs button").forEach(b => b.onclick = () => bereichSetzen(b.dataset.bereich));
+  $("trStarten").onclick = () => trStarten(null);
+  $("trSuche").oninput = trUebungslisteZeichnen;
+  $("trNurMeine").onchange = trUebungslisteZeichnen;
+  $("wAbbruch").onclick = () => {
+    if (trW && !trW.ende) $("wDialog").hidden = false;
+    else if (trW){ $("wiz").hidden = true; document.body.classList.remove("wiz-offen"); trW = null; }
+  };
+  $("wWeitermachen").onclick = () => { $("wDialog").hidden = true; };
+  $("wBeenden").onclick = () => { $("wDialog").hidden = true; trEnde(true); };
+  document.body.dataset.bereich = "protokoll";
 }
 
 /* ---------------- Speichern ---------------- */
@@ -5322,6 +6444,9 @@ function ergaenzen(s){
     {name:"", kcalProMinKg:0, minVorgabe:0, kmh:0, distEinheit:"km", distVorgabe:0, hmFaktor:0});
   erg.eigeneLm = eintraegeErgaenzen(erg.eigeneLm, [],
     {n:"", e:"g", kcal:0, p:0, f:null, kh:null, z:null, zz:null, stk:null});
+  erg.training.eigene = eintraegeErgaenzen(erg.training.eigene, [], {n:"", art:"gemischt", text:""});
+  if (!Array.isArray(erg.training.plan.tage)) erg.training.plan.tage = trainingPlanVorgabe().tage;
+  if (!Array.isArray(erg.training.plan.aus)) erg.training.plan.aus = ["kg"];
   delete erg.liste;          // wird nicht mehr gebraucht
   return erg;
 }
@@ -5558,6 +6683,7 @@ function start(){
   for (const el of document.querySelectorAll(".app > section.panel, .app > div.charts, .app > details.panel, .app > .filterreihe"))
     if (!el.dataset.tab) el.dataset.tab = "verlauf";
   document.querySelectorAll("#handyTabs button").forEach(b => b.onclick = () => tabSetzen(b.dataset.tab));
+  trainingVerbinden();
   tabSetzen("tag");
   $("btnMenue").onclick = menueOeffnen;
   $("btnLaden").onclick = ladenKlick;
