@@ -506,6 +506,19 @@ body:not([data-bereich="training"]) #trainingSeite{display:none}
 .trueb details summary{cursor:pointer;color:var(--ink-3);font-size:12px}
 .trueb .kette{font-size:12px;color:var(--ink-3);margin-top:4px}
 .trueb .kette b{color:var(--accent)}
+.trueb .mx{grid-column:1/-1;font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.trueb .mx.warn{color:var(--warn-ink)}
+#trHeute .note{margin:0}
+.treinst{display:grid;gap:4px}
+.treinst .e{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--line)}
+.treinst .e .n{margin-right:auto}
+.treinst .e .w{font-weight:650;font-variant-numeric:tabular-nums}
+.treinst .e .d{font-size:11px;color:var(--ink-3)}
+.einstfrage{font-size:18px;font-weight:650;margin:0 0 6px}
+.einstwert{display:flex;align-items:center;gap:10px;margin:12px 0 4px}
+.einstwert input{width:120px;font-size:28px;font-weight:650;text-align:center;padding:6px 8px;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font-variant-numeric:tabular-nums}
+.einstwert span{color:var(--ink-3)}
 .treigen{border:1px solid var(--line);border-radius:9px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
 .treigen .n{font-weight:650;margin-right:auto}
 .treigen .z{flex-basis:100%;font-size:12.5px;color:var(--ink-2);white-space:pre-line}
@@ -520,8 +533,8 @@ body:not([data-bereich="training"]) #trainingSeite{display:none}
 .trlist .e .t{color:var(--ink-2);margin-top:3px}
 .trlist .e .a{font-size:11px;color:var(--ink-3);margin-top:3px}
 .trlist .e.fehlt{opacity:.5}
-#dlgEigen{width:min(640px,94vw)}
-#dlgEigen textarea{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:8px 9px;
+#dlgEigTr{max-width:640px}
+#dlgEigTr textarea{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:8px 9px;
   font-family:ui-monospace,"Cascadia Mono","Consolas",monospace;font-size:13px;line-height:1.5;resize:vertical}
 .wiz{position:fixed;inset:0;z-index:60;background:var(--paper);display:flex;flex-direction:column;
   padding:12px 16px calc(16px + env(safe-area-inset-bottom))}
@@ -713,6 +726,21 @@ body.geraet #serverPanel{display:block}
         <div class="chips" id="trAus"></div>
         <p class="explain">Alles hier ist wählbar; Woche und Training des Tages entstehen daraus. Wer „Fitnessstudio“
           wählt, hat damit auch Stange, Bank, Hanteln, Kettlebell und Bänder — der Plan nimmt dann die Geräte-Übungen.</p>
+      </div>
+    </details>
+
+    <!-- Einstufung (1.13.0). Marco, 27.10.2026: „es sollte so wie eine befragung geben was man kann, damit das
+         training darauf aufbauen kann“ -->
+    <details class="panel acc" id="trEinst">
+      <summary><span>Einstufung</span><span class="hint" id="trEinstHint"></span></summary>
+      <div class="body">
+        <div class="treinst" id="trEinstListe"></div>
+        <div><button type="button" class="btn primary" id="trEinstStart">▶ Befragung starten</button></div>
+        <p class="explain">Aus deinem Maximum werden die Sätze: beim Fett verlieren 60 %, beim Muskelaufbau 75 %, bei
+          Runden auf Zeit die Hälfte. Für die übrigen Übungen derselben Reihe wird geschätzt — eine Stufe schwerer
+          ergibt etwa 60 % der Wiederholungen. Das ist ein Faustwert und steht in der Übersicht als „geschätzt“; mit
+          ✎ trägst du dein echtes Maximum ein. Ein Doppel-Up misst es jedes Mal neu. Bei Übungen mit Gewicht wählst du
+          das Gewicht, darum wird dort nichts geschätzt. Schaffst du mehr, einfach neu einstufen.</p>
       </div>
     </details>
 
@@ -1191,7 +1219,23 @@ body.geraet #serverPanel{display:block}
   </div>
 </div>
 
-<dialog id="dlgEigen">
+<dialog id="dlgEinst">
+  <h2 id="einstTitel">Einstufung</h2>
+  <div class="body">
+    <p class="einstfrage" id="einstFrage"></p>
+    <p class="explain" id="einstTipp"></p>
+    <div class="einstwert"><input type="number" id="einstWert" min="0" step="1" inputmode="numeric" aria-labelledby="einstFrage">
+      <span id="einstEinh"></span></div>
+    <p class="explain" id="einstAlt"></p>
+    <div class="dlgfoot">
+      <button class="btn ghost" id="einstZurueck" type="button">Zurück</button>
+      <button class="btn ghost" id="einstSkip" type="button">Weiss nicht</button>
+      <button class="btn primary" id="einstWeiter" type="button">Weiter</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="dlgEigTr">
   <h2>Eigenes Training</h2>
   <div class="body">
     <div class="row2">
@@ -1529,13 +1573,26 @@ const CONFIG = {
   // Schwere Langhantelübungen nie auf Zeit oder im Intervall: unter Ermüdung leidet die Technik zuerst
   trainingNichtAufZeit: ["lhBank","lhSchulter","lhRud","lhHock","frontHock","lhHip","lhRdl","kreuzheben"],
   // art: die Aktivitätsart, unter der das Training in den Tag kommt (kcal wie jede Aktivität)
+  // anteil: Wiederholungen je Satz als Anteil des Maximums, wenn es eine Einstufung gibt (1.13.0)
   trainingZiele: {
-    fett:   {n:"Fett verlieren, Muskeln halten", saetze:3, wdh:[8,12], sek:30, pause:60, art:"kraft", finisher:true},
-    muskel: {n:"Muskelaufbau", saetze:4, wdh:[6,12], sek:40, pause:90, art:"kraft"},
+    fett:   {n:"Fett verlieren, Muskeln halten", saetze:3, wdh:[8,12], sek:30, pause:60, art:"kraft", finisher:true, anteil:0.6},
+    muskel: {n:"Muskelaufbau", saetze:4, wdh:[6,12], sek:40, pause:90, art:"kraft", anteil:0.75},
     kond:   {n:"Kondition", art:"zirkel"},
     mobil:  {n:"Beweglichkeit, Rücken", runden:2, halten:45, art:"beweglich"},
   },
   trainingStufen: [{id:"ein", n:"Einsteiger", basis:1}, {id:"fort", n:"Fortgeschritten", basis:3}, {id:"profi", n:"Profi", basis:5}],
+  // Einstufung (1.13.0). Marco, 27.10.2026: „es sollte so wie eine befragung geben was man kann, damit das
+  // training darauf aufbauen kann“. Vier Grundübungen; die übrigen derselben Kette werden daraus geschätzt.
+  trainingEinstufung: [
+    {id:"ls",    frage:"Wie viele Liegestütze schaffst du am Stück?", tipp:"Sauber: Körper gerade wie ein Brett, Brust bis knapp über den Boden, ohne Pause oben."},
+    {id:"hock",  frage:"Wie viele Kniebeugen schaffst du am Stück?", tipp:"Ohne Gewicht, Oberschenkel mindestens waagrecht, Fersen bleiben am Boden."},
+    {id:"klimm", frage:"Wie viele Klimmzüge schaffst du am Stück?", tipp:"Aus dem gestreckten Hang, Kinn über die Stange. 0, wenn noch keiner geht."},
+    {id:"plank", frage:"Wie lange hältst du den Unterarmstütz?", tipp:"In Sekunden, bis die Hüfte absinkt oder hochgeht."},
+  ],
+  trainingSchwerer: 0.6,      // eine Stufe schwerer ≈ 60 % der Wiederholungen — Faustwert, je Übung korrigierbar
+  trainingSchaetzBis: 2,      // weiter weg in der Kette wird nicht geschätzt (Y-T-W aus Klimmzügen wäre geraten)
+  trainingAnteilZeit: 0.5,    // „Runden auf Zeit“: die Hälfte des Maximums je Runde
+  trainingMindest: {wdh:3, sek:10},   // weniger geht nicht sinnvoll — dann die leichtere Übung
   // Formen (Anregung Freeletics, eigene Umsetzung); Doppel-Up nach Marco
   trainingModi: [["saetze","Sätze & Pausen"],["intervall","Intervalle 40/20"],["zeit","Runden auf Zeit"],["doppel","Doppel-Up"]],
   trainingDauern: [15, 20, 30, 45, 60],
@@ -3070,7 +3127,7 @@ function cortanaUebernehmen(tage, plan, auswahl){
    Alles hier ist rein: der Plan kommt als Argument, nichts liest STATE. Ein absolviertes Training wird
    eine gewöhnliche Aktivität im Tag (trainingEintrag) — die kcal rechnet trainingKcal() wie immer. */
 function trainingPlanVorgabe(){ return {ziel:"fett", modus:"saetze", stufe:"fort", tage:[0, 2, 4], dauer:30, aus:["kg"]}; }
-function trainingVorgabe(){ return {plan:trainingPlanVorgabe(), stufeDelta:{}, coach:0, best:{}, doppel:{}, erledigt:{}, eigene:[]}; }
+function trainingVorgabe(){ return {plan:trainingPlanVorgabe(), stufeDelta:{}, coach:0, best:{}, doppel:{}, erledigt:{}, eigene:[], koennen:{}}; }
 
 /** Die Form, die wirklich gilt: Beweglichkeit hat nur eine; Kondition kennt keine Sätze mit langen Pausen. */
 function trainingModus(plan){
@@ -3120,17 +3177,59 @@ function trainingWocheDaten(d){
   return [0, 1, 2, 3, 4, 5, 6].map(i => tagPlus(mo, i));
 }
 
-/** Sätze, Wiederholungen bzw. Sekunden und Pause einer Übung, je nach Ziel, Form und Stufe. */
-function trainingSatzVorgabe(u, Z, modus, basis){
+/* Einstufung (1.13.0): was jemand am Stück schafft, in STATE.training.koennen = {übung: {w, d}}.
+   Gemessen gilt; sonst aus einer gemessenen Übung derselben Kette geschätzt — je Stufe schwerer
+   CONFIG.trainingSchwerer, höchstens CONFIG.trainingSchaetzBis Stufen weit, nur gleiche Art (Wdh/Sek)
+   und nur ohne Gewicht: bei Hanteln und Maschinen wählt man das Gewicht, nicht die Wiederholungen. */
+const trainingMitGewicht = id => (CONFIG.uebungen[id].aus || []).some(x => ["hantel", "kb", "band", "gym"].indexOf(x) >= 0);
+function trainingMax(id, g, koennen){
+  koennen = koennen || {};
+  const wert = x => { const w = koennen[x] ? zahl(koennen[x].w) : null; return w !== null && w >= 0 ? Math.round(w) : null; };
+  if (wert(id) !== null) return {w:wert(id), gemessen:true, von:id};
+  if (!CONFIG.uebungen[id] || trainingMitGewicht(id)) return null;
+  const k = CONFIG.uebKetten[g] || [], hier = k.find(x => x[0] === id);
+  if (!hier) return null;
+  let best = null;
+  for (const [t, dt] of k){
+    const w = wert(t);
+    if (t === id || w === null || trainingMitGewicht(t) || CONFIG.uebungen[t].art !== CONFIG.uebungen[id].art) continue;
+    const ab = hier[1] - dt;
+    if (Math.abs(ab) > CONFIG.trainingSchaetzBis) continue;
+    if (w === 0 && ab < 0) continue;          // wer 0 schafft, sagt damit nichts über die leichteren
+    if (!best || Math.abs(ab) < Math.abs(best.ab)) best = {t, w, ab};
+  }
+  return best ? {w:Math.round(best.w * Math.pow(CONFIG.trainingSchwerer, best.ab)), gemessen:false, von:best.t} : null;
+}
+/** Antworten der Befragung übernehmen ({übung: Eingabe}): leer lässt den alten Wert, 0 ist eine Angabe. */
+function einstufungSetzen(koennen, antworten, d){
+  const r = JSON.parse(JSON.stringify(koennen || {}));
+  for (const id in antworten){
+    const s = String(antworten[id] === null || antworten[id] === undefined ? "" : antworten[id]).trim();
+    const w = s === "" ? null : zahl(s);
+    if (w !== null && w >= 0) r[id] = {w:Math.round(w), d};
+  }
+  return r;
+}
+/** Das erste Doppel-Up einer Übung ist ein Maximum — es gilt danach auch für die Sätze. 0 heisst abgebrochen. */
+function doppelInsKoennen(koennen, ergebnisse, d){
+  const r = JSON.parse(JSON.stringify(koennen || {}));
+  for (const e of ergebnisse || []) if (zahl(e.max) > 0) r[e.id] = {w:Math.round(zahl(e.max)), d};
+  return r;
+}
+
+/** Sätze, Wiederholungen bzw. Sekunden und Pause einer Übung, je nach Ziel, Form und Stufe.
+    max (aus trainingMax): dann kommen die Wiederholungen aus dem Maximum statt aus der Stufe. */
+function trainingSatzVorgabe(u, Z, modus, basis, max){
   const wdh = b => b[0] + Math.round((b[1] - b[0]) * basis / 5);
+  const ausMax = (anteil, sonst) => max ? Math.max(1, Math.round(max.w * anteil)) : sonst;
   if (modus === "doppel") return {saetze:1, wert:null, pause:90, doppel:true};
   if (modus === "intervall") return {saetze:4, wert:40, art:"sek", pause:20};
   if (modus === "mobil") return {saetze:Z.runden, wert:Z.halten, art:"sek", pause:15};
-  if (modus === "zeit") return u.art === "sek" ? {saetze:3, wert:20 + basis * 5, pause:0}
-                                               : {saetze:3, wert:u.wdh ? wdh(u.wdh) : 8 + basis * 2, pause:0};
+  if (modus === "zeit") return u.art === "sek" ? {saetze:3, wert:ausMax(CONFIG.trainingAnteilZeit, 20 + basis * 5), pause:0}
+                                               : {saetze:3, wert:ausMax(CONFIG.trainingAnteilZeit, u.wdh ? wdh(u.wdh) : 8 + basis * 2), pause:0};
   // schwere Übungen haben ihren eigenen, tieferen Bereich (Klimmzug 3–8, nicht 8–12)
-  return u.art === "sek" ? {saetze:Z.saetze, wert:Z.sek + basis * 5, pause:Z.pause}
-                         : {saetze:Z.saetze, wert:wdh(u.wdh || Z.wdh), pause:Z.pause};
+  return u.art === "sek" ? {saetze:Z.saetze, wert:ausMax(Z.anteil, Z.sek + basis * 5), pause:Z.pause}
+                         : {saetze:Z.saetze, wert:ausMax(Z.anteil, wdh(u.wdh || Z.wdh)), pause:Z.pause};
 }
 /** Geschätzte Zeit einer Übung in Sekunden: 3 s je Wiederholung, Pausen dazwischen, 20 s Wechsel. */
 function trainingUebZeit(u){
@@ -3167,13 +3266,21 @@ function trainingTag(plan, vorlage, extra){
         const id = pool[(i + durchgang * 3) % pool.length][0];
         idx = k.findIndex(x => x[0] === id);
       } else {
-        idx = Math.max(0, Math.min(k.length - 1, trainingStelle(k, basis, plan) + (zahl((extra.stufeDelta || {})[schluessel]) || 0)));
+        // Einstufung: was laut Maximum gar nicht geht, weicht der leichteren; ▲▼ von Hand gilt danach
+        let stelle = trainingStelle(k, basis, plan);
+        while (stelle > 0){
+          const m = trainingMax(k[stelle][0], g, extra.koennen);
+          if (!m || m.w >= CONFIG.trainingMindest[CONFIG.uebungen[k[stelle][0]].art]) break;
+          stelle--;
+        }
+        idx = Math.max(0, Math.min(k.length - 1, stelle + (zahl((extra.stufeDelta || {})[schluessel]) || 0)));
       }
       const id = k[idx][0];
       if (kandidaten.some(u => u.id === id)) return;
       const u = CONFIG.uebungen[id];
-      kandidaten.push(Object.assign({id, n:u.n, g, kette:k.map(x => x[0]), idx, schluessel, art:u.art},
-                                    trainingSatzVorgabe(u, Z, modus, basis)));
+      const max = g === "mobil" || g === "kond" ? null : trainingMax(id, g, extra.koennen);
+      kandidaten.push(Object.assign({id, n:u.n, g, kette:k.map(x => x[0]), idx, schluessel, art:u.art, max},
+                                    trainingSatzVorgabe(u, Z, modus, basis, max)));
     });
   }
   // 2. So viele Übungen, wie mit den vorgesehenen Sätzen hineinpassen — mindestens 3, höchstens 8
@@ -3503,7 +3610,7 @@ function stateVorgabe(){
   };
 }
 
-const VERSION = "1.12.0";
+const VERSION = "1.13.0";
 
 let STATE = stateVorgabe();
 /* Naehrwerte: am PC aus naehrwerte.js neben der Datei, in der App ueber die Webadresse vom Server
@@ -5684,7 +5791,7 @@ function bereichSetzen(b){
   window.scrollTo(0, 0);
 }
 function trPlan(){ return STATE.training.plan; }
-function trExtra(){ return {stufeDelta:STATE.training.stufeDelta, coach:STATE.training.coach}; }
+function trExtra(){ return {stufeDelta:STATE.training.stufeDelta, coach:STATE.training.coach, koennen:STATE.training.koennen}; }
 function trGewicht(){ return letztesGewicht(); }
 function trKcal(art, min, dist){
   const g = trGewicht();
@@ -5752,6 +5859,8 @@ function trainingZeichnen(){
     const kc = trKcal(tr.art, tr.dauer);
     $("trSumme").textContent = "ca. " + tr.dauer + " min" + (kc ? " · " + fmt(kc, 0) + " kcal netto" : "") + " · " + tr.liste.length + " Übungen";
     box.innerHTML = trUebersichtHtml(tr, v);
+    box.querySelectorAll("button[data-m]").forEach(b => b.onclick = () => trEinstufen([trEinstFrage(b.dataset.m)]));
+    if ($("trEinstJetzt")) $("trEinstJetzt").onclick = () => trEinstufen(CONFIG.trainingEinstufung);
     box.querySelectorAll("button[data-s]").forEach(b => b.onclick = () => {
       const sd = STATE.training.stufeDelta;
       sd[b.dataset.s] = (zahl(sd[b.dataset.s]) || 0) + (+b.dataset.d);
@@ -5759,12 +5868,76 @@ function trainingZeichnen(){
       trAenderung();
     });
   }
+  trEinstZeichnen();
   trEigeneZeichnen();
   trUebungslisteZeichnen();
 }
 
+/* ---- Einstufung (1.13.0) ---- */
+const trEinh = id => CONFIG.uebungen[id].art === "sek" ? "s" : "Wdh";
+function trEinstFrage(id){
+  return CONFIG.trainingEinstufung.find(f => f.id === id) || {id, tipp:CONFIG.uebungen[id].tipp,
+    frage:CONFIG.uebungen[id].art === "sek" ? "Wie lange hältst du „" + CONFIG.uebungen[id].n + "“?"
+                                            : "Wie viele „" + CONFIG.uebungen[id].n + "“ schaffst du am Stück?"};
+}
+const trDatum = d => d ? alsDatum(d).toLocaleDateString("de-CH", {day:"2-digit", month:"2-digit", year:"numeric"}) : "";
+function trEinstZeichnen(){
+  const ko = STATE.training.koennen, ids = Object.keys(ko).filter(id => CONFIG.uebungen[id]);
+  const reihe = CONFIG.trainingEinstufung.map(f => f.id).concat(ids.filter(id => !CONFIG.trainingEinstufung.some(f => f.id === id)));
+  $("trEinstHint").textContent = ids.length
+    ? reihe.filter(id => ko[id]).slice(0, 4).map(id => ko[id].w + (trEinh(id) === "s" ? " s " : " ") + CONFIG.uebungen[id].n).join(" · ")
+    : "noch nicht gemacht";
+  $("trEinstListe").innerHTML = reihe.map(id => {
+    const e = ko[id];
+    return '<div class="e"><span class="n">' + esc(CONFIG.uebungen[id].n) + '</span>'
+      + '<span class="w">' + (e ? e.w + " " + trEinh(id) : "—") + '</span><span class="d">' + (e ? trDatum(e.d) : "") + '</span>'
+      + '<button type="button" class="btn mini" data-m="' + esc(id) + '">✎</button></div>';
+  }).join("");
+  $("trEinstListe").querySelectorAll("button[data-m]").forEach(b => b.onclick = () => trEinstufen([trEinstFrage(b.dataset.m)]));
+  $("trEinstStart").textContent = ids.length ? "Neu einstufen" : "▶ Befragung starten";
+}
+/** Befragung: eine Frage je Schritt. Mit einer einzigen Frage ist es „✎ Maximum“ einer Übung. */
+function trEinstufen(fragen){
+  const dlg = $("dlgEinst"), antw = {};
+  let i = 0;
+  const zeigen = () => {
+    const f = fragen[i], alt = STATE.training.koennen[f.id];
+    $("einstTitel").textContent = fragen.length > 1 ? "Einstufung · " + (i + 1) + " von " + fragen.length : "Dein Maximum";
+    $("einstFrage").textContent = f.frage;
+    $("einstTipp").textContent = f.tipp;
+    $("einstEinh").textContent = trEinh(f.id) === "s" ? "Sekunden" : "am Stück";
+    $("einstWert").value = antw[f.id] !== undefined ? antw[f.id] : alt ? alt.w : "";
+    $("einstAlt").textContent = alt ? "Bisher: " + alt.w + " " + trEinh(f.id) + " (" + trDatum(alt.d) + ")" : "";
+    $("einstAlt").style.color = "";
+    $("einstZurueck").hidden = i === 0;
+    $("einstWeiter").textContent = i === fragen.length - 1 ? "Fertig" : "Weiter";
+    setTimeout(() => $("einstWert").select(), 0);
+  };
+  const weiter = leer => {
+    const s = leer ? "" : $("einstWert").value.trim();
+    if (s !== "" && !(zahl(s) !== null && zahl(s) >= 0)){
+      $("einstAlt").textContent = "Bitte eine Zahl ab 0 — oder „Weiss nicht“."; $("einstAlt").style.color = "var(--warn-ink)";
+      return;
+    }
+    antw[fragen[i].id] = s;
+    if (i < fragen.length - 1){ i++; zeigen(); return; }
+    dlg.close();
+    STATE.training.koennen = einstufungSetzen(STATE.training.koennen, antw, heute());
+    trAenderung();
+  };
+  $("einstWeiter").onclick = () => weiter(false);
+  $("einstSkip").onclick = () => weiter(true);
+  $("einstZurueck").onclick = () => { antw[fragen[i].id] = $("einstWert").value.trim(); i = Math.max(0, i - 1); zeigen(); };
+  $("einstWert").onkeydown = e => { if (e.key === "Enter"){ e.preventDefault(); weiter(false); } };
+  zeigen();
+  dlg.showModal();
+}
+
 function trUebersichtHtml(tr, v){
-  let h = '<div class="trteil">Aufwärmen · ' + Math.round(tr.auf / 60) + ' min</div>';
+  const Z = CONFIG.trainingZiele[trPlan().ziel] || {}, ko = STATE.training.koennen;
+  let h = Object.keys(ko).length ? "" : '<p class="note">Noch keine Einstufung — die Wiederholungen sind Vorgaben der Stufe, '
+    + 'nicht deine. <button type="button" class="btn mini" id="trEinstJetzt">Einstufung machen</button></p>';
+  h += '<div class="trteil">Aufwärmen · ' + Math.round(tr.auf / 60) + ' min</div>';
   h += tr.modus === "zeit"
       ? '<div class="trteil">Hauptteil · ' + (tr.liste[0] ? tr.liste[0].saetze : 0) + ' Runden auf Zeit</div><p class="explain">Alle Übungen nacheinander, '
         + 'dann von vorn — so schnell, wie es sauber geht. ' + (STATE.training.best[v] ? 'Bestzeit: <b>' + mmss(STATE.training.best[v]) + '</b>' : 'Noch keine Bestzeit.') + '</p>'
@@ -5780,11 +5953,24 @@ function trUebersichtHtml(tr, v){
     const stufe = u.g !== "mobil" && u.g !== "kond";
     // die Schwierigkeit 0–5 wie in der Übungsliste — die Stelle in der Kette hinge an der Ausrüstung
     const l = (CONFIG.uebKetten[u.g].find(x => x[0] === u.id) || [0, 0])[1];
+    // woher die Wiederholungen kommen — aus dem Maximum (gemessen oder geschätzt) oder aus der Stufe
+    const mitMax = stufe && (tr.modus === "saetze" || tr.modus === "zeit"), e = sek ? " s" : "";
+    let mx = "", warn = false;
+    if (mitMax){
+      mx = !u.max ? (trainingMitGewicht(u.id) ? "Gewicht so wählen, dass die letzte Wiederholung schwer fällt" : "Maximum unbekannt — Vorgabe der Stufe")
+        : u.max.gemessen ? "aus deinem Maximum " + u.max.w + e + (ko[u.id] && ko[u.id].d ? " (" + trDatum(ko[u.id].d) + ")" : "")
+        : "Maximum ≈ " + u.max.w + e + ", geschätzt aus " + ko[u.max.von].w + e + " " + CONFIG.uebungen[u.max.von].n;
+      if (u.max && !sek && tr.modus === "saetze" && Z.wdh && u.wert > Z.wdh[1] && u.idx < u.kette.length - 1){
+        mx += " — über " + Z.wdh[1] + " je Satz: ▲ schwerer wirkt mehr"; warn = true;
+      }
+    }
     h += '<div class="trueb"><span class="n">' + esc(u.n) + '<small>' + (stufe ? "Schwierigkeit " + l + "/5" : "") + '</small></span>'
       + '<span class="vg">' + vg + '</span>'
+      + (mx ? '<span class="mx' + (warn ? " warn" : "") + '">' + esc(mx) + '</span>' : "")
       + (stufe ? '<div class="stufe"><button type="button" class="btn mini" data-s="' + u.schluessel + '" data-d="-1"' + (u.idx === 0 ? " disabled" : "")
           + '>▼ leichter</button><button type="button" class="btn mini" data-s="' + u.schluessel + '" data-d="1"'
-          + (u.idx === u.kette.length - 1 ? " disabled" : "") + '>▲ schwerer</button></div>' : "")
+          + (u.idx === u.kette.length - 1 ? " disabled" : "") + '>▲ schwerer</button>'
+          + (mitMax ? '<button type="button" class="btn mini" data-m="' + esc(u.id) + '">✎ Maximum</button>' : "") + '</div>' : "")
       + '<details><summary>So geht es</summary>' + esc(CONFIG.uebungen[u.id].tipp)
       + (stufe ? '<div class="kette">Stufen: ' + u.kette.map((id, i) => i === u.idx ? "<b>" + esc(CONFIG.uebungen[id].n) + "</b>" : esc(CONFIG.uebungen[id].n)).join(" → ") + '</div>' : "")
       + '</details></div>';
@@ -5796,8 +5982,8 @@ function trUebersichtHtml(tr, v){
       + (tr.modus === "zeit" ? "auf Zeit (gedacht bis 30 min)" : "mit dieser Ausrüstung") + ' nur für ca. ' + tr.dauer
       + ' min. Mehr Übungen gibt es mit Stuhl/Bank, Gummiband, Hanteln oder Fitnessstudio — oder „Sätze &amp; Pausen“ wählen.</p>';
   if (tr.modus === "saetze")
-    h += '<p class="explain">Steigern: Schaffst du in allen Sätzen mehr als vorgegeben, sag nach dem Training „zu leicht“ — '
-      + 'dann kommt beim nächsten Mal die schwerere Stufe. Einzelne Übungen stellst du mit ▲▼ selbst.</p>';
+    h += '<p class="explain">Steigern: Schaffst du am Stück mehr, trag mit ✎ dein neues Maximum ein — die Sätze wachsen mit. '
+      + 'Sag nach dem Training „zu leicht“, kommt beim nächsten Mal die schwerere Stufe. Einzelne Übungen stellst du mit ▲▼ selbst.</p>';
   return h;
 }
 
@@ -5833,7 +6019,7 @@ function trEigeneZeichnen(){
   });
 }
 function trEigenBearbeiten(e){
-  const dlg = $("dlgEigen");
+  const dlg = $("dlgEigTr");
   $("eigTrName").value = e ? e.n : "";
   $("eigTrArt").innerHTML = STATE.aktArten.filter(a => a.id).map(a => '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>').join("");
   $("eigTrArt").value = e ? e.art : "schwimm";
@@ -5950,7 +6136,7 @@ function trStarten(quelle){
     info = {art:tr.art, n:tr.n, v, tr};
   }
   if (!liste.length){ melden("Nichts zu tun", "Dieses Training hat noch keine Schritte."); return; }
-  trW = {info, liste, i:0, start:Date.now(), seit:Date.now(), plus:0, zeitStart:null, zeitEnde:null, ton:null, ende:false, d:null, ergebnisse:[]};
+  trW = {info, liste, i:0, start:Date.now(), seit:Date.now(), plus:0, zeitStart:null, zeitEnde:null, ton:null, ende:false, d:null, ergebnisse:[], maxima:[]};
   $("wiz").hidden = false; document.body.classList.add("wiz-offen");
   trBildschirm(true);
   trW.tick = setInterval(trTick, 200);
@@ -6042,7 +6228,10 @@ function trZeichnenSchritt(){
 function trDoppelSek(){ return Math.round((Date.now() - trW.d.start) / 1000); }
 function trDoppelZaehlen(n){
   const d = trW.d;
+  const ersterDurchgang = d.z.max === null;
   d.z = doppelZaehlen(d.z, n);
+  // Durchgang 1 ist ein Maximum — es gilt für die Einstufung auch, wenn danach abgebrochen wird
+  if (ersterDurchgang) trW.maxima.push({id:trSchritt().id, max:d.z.max});
   if (d.z.fertig){ d.phase = "fertig"; }
   else { d.phase = "pause"; d.pauseBis = Date.now() + CONFIG.doppelPause * 1000; trW.ton = null; }
   trDoppelZeichnen(trSchritt());
@@ -6159,6 +6348,7 @@ function trEnde(abgebrochen){
   const merken = () => {
     if (trW.bestzeit && (!STATE.training.best[info.v] || trW.bestzeit < STATE.training.best[info.v])) STATE.training.best[info.v] = trW.bestzeit;
     for (const r of trW.ergebnisse) STATE.training.doppel[r.id] = {max:r.max, saetze:r.saetze};
+    STATE.training.koennen = doppelInsKoennen(STATE.training.koennen, trW.maxima, heute());
     if (rueck !== null) STATE.training.coach = Math.max(-3, Math.min(3, (zahl(STATE.training.coach) || 0) + rueck));
   };
   $("wVerwerfen").onclick = () => { merken(); schliessen(); neu(); };
@@ -6168,6 +6358,7 @@ function trEnde(abgebrochen){
 function trainingVerbinden(){
   document.querySelectorAll("#bereichTabs button").forEach(b => b.onclick = () => bereichSetzen(b.dataset.bereich));
   $("trStarten").onclick = () => trStarten(null);
+  $("trEinstStart").onclick = () => trEinstufen(CONFIG.trainingEinstufung);
   $("trSuche").oninput = trUebungslisteZeichnen;
   $("trNurMeine").onchange = trUebungslisteZeichnen;
   $("wAbbruch").onclick = () => {
