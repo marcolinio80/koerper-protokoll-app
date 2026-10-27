@@ -509,6 +509,15 @@ body:not([data-bereich="training"]) #trainingSeite{display:none}
 .trueb .mx{grid-column:1/-1;font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
 .trueb .mx.warn{color:var(--warn-ink)}
 #trHeute .note{margin:0}
+.trss{font-size:11px;font-weight:650;color:var(--accent);margin:6px 0 -2px}
+.anl{font-size:13px;color:var(--ink-2);line-height:1.5;margin-top:6px;text-align:left}
+.anl p{margin:4px 0}
+.anl ol,.anl ul{margin:2px 0 6px;padding-left:20px}
+.anl .tp{color:var(--ink-3);font-style:italic}
+.anl .vid{display:inline-block;margin-top:4px;text-decoration:none}
+.trlist .e details{margin-top:4px;font-size:12px}
+.trlist .e details summary{cursor:pointer;color:var(--ink-3)}
+.trueb.ss{border-left:3px solid var(--accent)}
 .treinst{display:grid;gap:4px}
 .treinst .e{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--line)}
 .treinst .e .n{margin-right:auto}
@@ -720,6 +729,7 @@ body.geraet #serverPanel{display:block}
       <div class="body">
         <div class="chips" id="trZiel"></div>
         <div class="chips" id="trModus"></div>
+        <div class="chips" id="trSuper"></div>
         <div class="chips" id="trStufe"></div>
         <div class="chips" id="trTage"></div>
         <div class="chips" id="trDauer"></div>
@@ -1546,6 +1556,347 @@ const CONFIG = {
   /* Ketten: leicht → schwer, je Übung die Schwierigkeit 0–5. Gewählt wird die schwerste, die zur Stufe
      passt (Einsteiger 1, Fortgeschritten 3, Profi 5) — nicht die Stelle in der Kette, sonst sprang eine
      kurze Kette bei „Fortgeschritten“ ans Ende (im Entwurf gefunden). */
+  // Anleitungen (1.15.0). Marco, 27.10.2026: „ok und dann wären anleitungen und videos top zur jeder übung“.
+  // s = Ausgangsposition, a = Ausführung (2–4 Schritte), f = typische Fehler, at = Atmung,
+  // v = eigener Suchbegriff fürs Video (sonst „Name richtig ausführen“). Eigene Texte, Faustregeln — keine Therapie.
+  uebAnleitung: {
+    wandLs:    {s:"Etwa eine Armlänge vor der Wand stehen, Hände schulterbreit auf Brusthöhe an die Wand.",
+                a:["Körper von Kopf bis Ferse gerade halten, Bauch leicht fest.", "Ellbogen beugen, bis die Brust fast die Wand berührt.", "Kräftig zurückdrücken, bis die Arme gestreckt sind."],
+                f:["Hüfte knickt nach vorne ein.", "Ellbogen stehen seitlich wie ein T ab — besser etwa 45° zum Körper."],
+                at:"Beim Senken einatmen, beim Wegdrücken ausatmen."},
+    knieLs:    {s:"Vierfüssler, dann die Knie etwas nach hinten setzen, Hände leicht breiter als die Schultern.",
+                a:["Hüfte strecken, bis Schulter, Hüfte und Knie eine Linie bilden.", "Brust kontrolliert bis knapp über den Boden senken.", "Gleichmässig hochdrücken, Arme ganz strecken."],
+                f:["Gesäss bleibt oben — dann ist es keine Liegestütz, sondern ein Nicken.", "Nur halb hinunter."],
+                at:"Hinunter einatmen, hoch ausatmen."},
+    schraegLs: {s:"Hände auf eine stabile Bank oder einen Stuhl an der Wand, Füsse hinten, Körper schräg und gerade.",
+                a:["Rumpf und Gesäss anspannen.", "Brust zur Kante senken, Ellbogen etwa 45° vom Körper.", "Hochdrücken, bis die Arme gestreckt sind."],
+                f:["Stuhl rutscht weg — immer gegen eine Wand stellen.", "Kopf voraus statt Brust voraus."],
+                at:"Hinunter einatmen, hoch ausatmen."},
+    ls:        {s:"Hohe Stützposition, Hände etwas breiter als die Schultern, Füsse zusammen, Körper wie ein Brett.",
+                a:["Bauch und Gesäss fest, Blick leicht vor die Hände.", "Ellbogen nach hinten-aussen beugen, Brust bis eine Faust über den Boden.", "Den Boden wegdrücken, oben die Schulterblätter leicht auseinander."],
+                f:["Hüfte hängt durch (Hohlkreuz).", "Ellbogen ganz seitlich abgespreizt.", "Kopf sinkt zuerst zum Boden."],
+                at:"Hinunter einatmen, hoch ausatmen."},
+    engLs:     {s:"Wie eine Liegestütz, die Hände aber direkt unter den Schultern, Finger nach vorne.",
+                a:["Ellbogen streifen beim Senken am Oberkörper entlang.", "Brust bis knapp über die Hände senken.", "Hochdrücken, Ellbogen bleiben eng."],
+                f:["Ellbogen gehen doch nach aussen.", "Schultern ziehen zu den Ohren."],
+                at:"Hinunter einatmen, hoch ausatmen."},
+    fussLs:    {s:"Füsse auf Bank oder Stuhl, Hände schulterbreit am Boden, Körper gerade von Ferse bis Kopf.",
+                a:["Rumpf fest, damit die Hüfte nicht absackt.", "Brust kontrolliert zum Boden senken.", "Kräftig hochdrücken."],
+                f:["Hüfte knickt nach oben oder unten.", "Zu hohe Ablage für den Anfang — erst niedrig beginnen."],
+                at:"Hinunter einatmen, hoch ausatmen.", v:"Liegestütz Füsse erhöht richtig ausführen"},
+    archerLs:  {s:"Stützposition mit sehr breit gesetzten Händen, Finger leicht nach aussen.",
+                a:["Gewicht zu einer Seite verlagern und dorthin senken.", "Der andere Arm bleibt fast gestreckt und stützt nur.", "Hochdrücken, dann zur anderen Seite."],
+                f:["Hüfte dreht mit.", "Gestreckter Arm trägt zu viel — dann ist es eine breite Liegestütz."],
+                at:"Hinunter einatmen, hoch ausatmen.", v:"Archer Push Up richtig ausführen"},
+    bankDips:  {s:"Rücken zur Bank, Hände schulterbreit hinter dir auf der Kante, Finger nach vorne, Beine angewinkelt.",
+                a:["Gesäss knapp vor die Kante schieben.", "Ellbogen nach hinten beugen, bis etwa 90°.", "Aus den Armen hochdrücken, Schultern weg von den Ohren."],
+                f:["Zu tief — vorne an der Schulter darf es nicht ziehen.", "Ellbogen gehen weit nach aussen."],
+                at:"Hinunter einatmen, hoch ausatmen."},
+    ringDips:  {s:"Im Stütz zwischen Ringen oder Barren, Arme gestreckt, Schultern tief, Beine leicht vor dem Körper.",
+                a:["Oberkörper leicht nach vorne neigen.", "Senken, bis die Schulter auf Höhe der Ellbogen ist.", "Kontrolliert hochdrücken, oben ganz strecken."],
+                f:["Schultern rutschen zu den Ohren.", "Fallen lassen statt senken."],
+                at:"Hinunter einatmen, hoch ausatmen."},
+    pikeLs:    {s:"Aus der Stützposition die Hüfte hoch schieben (umgekehrtes V), Hände schulterbreit, Beine möglichst gestreckt.",
+                a:["Ellbogen beugen und den Kopf vor die Hände Richtung Boden führen.", "Kurz vor dem Boden stoppen.", "Zurück nach oben drücken, Hüfte bleibt oben."],
+                f:["Hüfte sinkt ab — dann wird es eine normale Liegestütz.", "Kopf landet zwischen den Händen statt davor."],
+                at:"Hinunter einatmen, hoch ausatmen."},
+    superman:  {s:"Bauchlage, Arme nach vorne gestreckt, Stirn knapp über dem Boden.",
+                a:["Arme, Brust und Beine gleichzeitig leicht anheben.", "2 Sekunden halten, Gesäss fest.", "Langsam ablegen."],
+                f:["Kopf in den Nacken reissen — Blick bleibt zum Boden.", "Mit Schwung statt kontrolliert."],
+                at:"Beim Anheben ausatmen, beim Ablegen einatmen.", v:"Superman Übung richtig ausführen"},
+    ytw:       {s:"Bauchlage, Stirn auf einem Handtuch, Arme lang.",
+                a:["Arme als Y schräg nach vorne heben, Daumen zur Decke, kurz halten.", "Dann als T seitlich, dann als W mit gebeugten Ellbogen.", "Bei jedem Buchstaben die Schulterblätter nach hinten-unten ziehen."],
+                f:["Aus dem unteren Rücken hochkommen statt aus den Schultern.", "Schultern zu den Ohren."],
+                at:"Ruhig weiteratmen, beim Anheben ausatmen.", v:"Y T W Übung Bauchlage"},
+    bandRud:   {s:"Band auf Brusthöhe an Tür oder Pfosten befestigen, Enden fassen, einen Schritt zurück bis Spannung da ist.",
+                a:["Aufrecht stehen, Knie leicht gebeugt.", "Ellbogen nah am Körper nach hinten ziehen.", "Schulterblätter zusammen, kurz halten, langsam nachgeben."],
+                f:["Oberkörper lehnt sich nach hinten.", "Band schnalzt zurück — immer kontrolliert."],
+                at:"Beim Ziehen ausatmen, beim Nachgeben einatmen.", v:"Rudern mit Widerstandsband"},
+    ringRud:   {s:"Unter Ringen oder einer tiefen Stange, Griffe fassen, Körper schräg nach hinten, Fersen am Boden.",
+                a:["Körper gerade wie ein Brett, Gesäss fest.", "Brust zu den Griffen ziehen, Ellbogen nah am Körper.", "Langsam ablassen bis die Arme gestreckt sind."],
+                f:["Hüfte hängt durch.", "Nur die Arme ziehen, die Schulterblätter bleiben passiv."],
+                at:"Beim Ziehen ausatmen, beim Ablassen einatmen.", v:"Australian Pull Up richtig ausführen"},
+    negKlimm:  {s:"Mit Sprung oder Stuhl in die obere Position, Kinn über der Stange, Griff schulterbreit.",
+                a:["Oben kurz halten, Schultern tief.", "In 3–5 Sekunden gleichmässig ablassen.", "Unten ganz strecken, absteigen, wieder oben beginnen."],
+                f:["Unten fallen lassen — die letzte Strecke zählt am meisten.", "Zu schnell, unter 3 Sekunden."],
+                at:"Beim Ablassen gleichmässig ausatmen.", v:"Negative Klimmzüge richtig ausführen"},
+    klimm:     {s:"Im gestreckten Hang an der Stange, Griff etwas breiter als die Schultern, Handflächen nach vorne.",
+                a:["Zuerst die Schulterblätter nach unten ziehen.", "Ellbogen Richtung Hüfte ziehen, bis das Kinn über der Stange ist.", "Kontrolliert bis in den gestreckten Hang ablassen."],
+                f:["Mit Schwung oder Strampeln.", "Nur halb ablassen.", "Kinn reckt sich über die Stange statt der Körper hoch."],
+                at:"Beim Hochziehen ausatmen, beim Ablassen einatmen."},
+    archKlimm: {s:"Im Hang mit sehr breitem Griff.",
+                a:["Zu einer Hand hochziehen, der andere Arm streckt sich seitlich.", "Kinn über die Hand der Zugseite.", "Langsam ablassen, dann die andere Seite."],
+                f:["Gestreckter Arm zieht mit — dann ist es ein breiter Klimmzug.", "Körper dreht ein."],
+                at:"Beim Hochziehen ausatmen, beim Ablassen einatmen.", v:"Archer Pull Up richtig ausführen"},
+    hantelRud: {s:"Eine Hand und ein Knie auf der Bank, anderer Fuss am Boden, Hantel hängt unter der Schulter.",
+                a:["Rücken gerade und waagrecht.", "Hantel zur Hüfte ziehen, Ellbogen nah am Körper.", "Oben kurz halten, langsam ablassen."],
+                f:["Oberkörper dreht auf.", "Aus dem Bizeps ziehen statt aus dem Rücken."],
+                at:"Beim Ziehen ausatmen, beim Ablassen einatmen."},
+    hock:      {s:"Füsse schulterbreit, Zehen leicht nach aussen, Arme nach vorne oder vor der Brust.",
+                a:["Hüfte nach hinten-unten schieben, als ob du dich setzt.", "Knie folgen der Richtung der Zehen, Brust bleibt aufrecht.", "Bis die Oberschenkel mindestens waagrecht sind, dann aus den Fersen hochdrücken."],
+                f:["Fersen heben ab.", "Knie fallen nach innen.", "Rücken rundet unten."],
+                at:"Hinunter einatmen, hoch ausatmen."},
+    stuhlHock: {s:"Vor einem Stuhl stehen, Füsse schulterbreit, Arme nach vorne.",
+                a:["Hüfte nach hinten, langsam Richtung Sitzfläche.", "Mit dem Gesäss nur antippen, nicht absitzen.", "Aus den Fersen wieder hoch."],
+                f:["Plumpsen und mit Schwung hoch.", "Knie nach innen."],
+                at:"Hinunter einatmen, hoch ausatmen."},
+    hockTempo: {s:"Wie die Kniebeuge, Füsse schulterbreit.",
+                a:["3 Sekunden hinunter zählen.", "Unten 1 Sekunde halten, Spannung bleibt.", "Zügig hochdrücken."],
+                f:["Das Tempo wird mit der Zeit schneller — weiter zählen.", "Unten zusammensacken statt halten."],
+                at:"Hinunter einatmen, unten kurz halten, hoch ausatmen.", v:"Tempo Kniebeuge langsam"},
+    sprungHockW:{s:"Füsse schulterbreit, Arme hinten zum Ausholen.",
+                a:["Tief in die Kniebeuge.", "Explosiv hochspringen, Arme schwingen mit.", "Weich auf den Fussballen landen und gleich in die nächste Kniebeuge."],
+                f:["Hart auf den Fersen landen.", "Knie fallen beim Landen nach innen."],
+                at:"Beim Absprung ausatmen.", v:"Jump Squat richtig ausführen"},
+    gobletHock:{s:"Kurzhantel oder Kettlebell senkrecht vor der Brust halten, Füsse etwas breiter als schulterbreit.",
+                a:["Ellbogen zeigen nach unten, Brust bleibt hoch.", "Tief zwischen die Knie sinken.", "Aus den Fersen hochdrücken."],
+                f:["Gewicht wandert vom Körper weg.", "Rücken rundet."],
+                at:"Hinunter einatmen, hoch ausatmen.", v:"Goblet Squat richtig ausführen"},
+    ausfall:   {s:"Aufrecht stehen, Füsse hüftbreit, Hände an der Hüfte.",
+                a:["Einen grossen Schritt nach vorne.", "Hinteres Knie senkrecht Richtung Boden senken, vorderes Knie über dem Fuss.", "Vorne abdrücken und zurück, dann die andere Seite."],
+                f:["Vorderes Knie schiebt weit über die Zehen.", "Oberkörper kippt nach vorne."],
+                at:"Hinunter einatmen, hoch ausatmen."},
+    bulgar:    {s:"Rücken zur Bank, einen Fuss hinten mit dem Rist auf die Kante, vorderer Fuss gut einen Schritt davor.",
+                a:["Oberkörper aufrecht, leicht nach vorne geneigt.", "Hinteres Knie Richtung Boden senken.", "Aus der vorderen Ferse hochdrücken — erst alle auf einer Seite, dann wechseln."],
+                f:["Vorderer Fuss zu nah an der Bank.", "Vorderes Knie fällt nach innen."],
+                at:"Hinunter einatmen, hoch ausatmen.", v:"Bulgarian Split Squat richtig ausführen"},
+    pistolAss: {s:"Auf einem Bein, mit einer Hand am Türrahmen oder an den Ringen, anderes Bein nach vorne gestreckt.",
+                a:["Langsam einbeinig tief sinken, Halt nur so viel wie nötig.", "Ferse bleibt am Boden.", "Hochdrücken — je Seite."],
+                f:["Am Halt hochziehen statt aus dem Bein.", "Knie fällt nach innen."],
+                at:"Hinunter einatmen, hoch ausatmen.", v:"Pistol Squat Progression"},
+    pistol:    {s:"Auf einem Bein, anderes Bein gestreckt nach vorne, Arme vorne als Gegengewicht.",
+                a:["Kontrolliert ganz tief sinken.", "Unten Rücken möglichst lang, Ferse am Boden.", "Ohne Schwung hochdrücken — je Seite."],
+                f:["Unten zusammenfallen und mit Schwung hoch.", "Ferse hebt ab."],
+                at:"Hinunter einatmen, hoch ausatmen.", v:"Pistol Squat richtig ausführen"},
+    bridge:    {s:"Rückenlage, Knie gebeugt, Füsse hüftbreit nah am Gesäss, Arme neben dem Körper.",
+                a:["Gesäss anspannen und die Hüfte hochschieben.", "Oben eine Linie von Knie über Hüfte zur Schulter, 1 Sekunde halten.", "Langsam ablegen, kurz vor dem Boden wieder hoch."],
+                f:["Hohlkreuz statt Gesäss — die Rippen bleiben unten.", "Druck in den Zehen statt in den Fersen."],
+                at:"Hoch ausatmen, hinunter einatmen.", v:"Glute Bridge richtig ausführen"},
+    bridge1:   {s:"Wie beim Hüftheben, ein Bein gestreckt in der Luft, Oberschenkel parallel.",
+                a:["Über die Ferse des Standbeins die Hüfte hochdrücken.", "Becken bleibt waagrecht, oben kurz halten.", "Langsam ablegen — erst alle auf einer Seite, dann wechseln."],
+                f:["Becken kippt zur Seite des freien Beins.", "Hohlkreuz."],
+                at:"Hoch ausatmen, hinunter einatmen.", v:"Single Leg Glute Bridge"},
+    hipThrust: {s:"Schulterblätter an die Kante einer stabilen Bank, Füsse hüftbreit, Knie gebeugt.",
+                a:["Kinn leicht zur Brust, Blick nach vorne.", "Hüfte hochdrücken, bis der Oberkörper waagrecht ist.", "Oben 1 Sekunde das Gesäss anspannen, langsam senken."],
+                f:["Hohlkreuz oben.", "Bank rutscht — gegen die Wand stellen."],
+                at:"Hoch ausatmen, hinunter einatmen.", v:"Hip Thrust Bank richtig ausführen"},
+    kbSwing:   {s:"Füsse etwas breiter als die Schultern, Kettlebell vor dir am Boden, Rücken gerade.",
+                a:["Kettlebell zwischen die Beine nach hinten schwingen, Hüfte weit nach hinten.", "Explosiv die Hüfte strecken, die Kugel steigt bis Brusthöhe.", "Arme sind nur Seile, oben Gesäss fest, dann wieder zurück schwingen."],
+                f:["Aus den Armen heben.", "Kniebeuge statt Hüftbeuge.", "Rücken rundet beim Zurückschwingen."],
+                at:"Beim Strecken kräftig ausatmen.", v:"Kettlebell Swing richtig ausführen"},
+    rdlHantel: {s:"Aufrecht, Hanteln vor den Oberschenkeln, Füsse hüftbreit, Knie leicht gebeugt.",
+                a:["Hüfte nach hinten schieben, Oberkörper kippt mit geradem Rücken.", "Hanteln gleiten nah an den Beinen bis unter die Knie.", "Aus der Hüfte aufrichten, Gesäss fest."],
+                f:["Rücken rundet.", "Knie beugen immer mehr — es wird eine Kniebeuge."],
+                at:"Hinunter einatmen, hoch ausatmen.", v:"Rumänisches Kreuzheben Kurzhantel"},
+    waden:     {s:"Mit den Fussballen auf einer Stufe, Fersen frei, mit einer Hand leicht abstützen.",
+                a:["Fersen langsam unter die Stufe senken.", "So hoch wie möglich auf die Zehen drücken.", "Oben 1 Sekunde halten."],
+                f:["Wippen statt ganzer Weg.", "Zu schnell."],
+                at:"Hoch ausatmen, hinunter einatmen."},
+    plank:     {s:"Unterarme am Boden, Ellbogen unter den Schultern, Füsse hüftbreit.",
+                a:["Körper von Kopf bis Ferse gerade.", "Bauchnabel leicht einziehen, Gesäss anspannen.", "Halten, solange die Linie stimmt."],
+                f:["Hüfte hängt durch oder geht hoch.", "Luft anhalten."],
+                at:"Ruhig und gleichmässig weiteratmen.", v:"Unterarmstütz Plank richtig ausführen"},
+    seitPlank: {s:"Seitlage, Ellbogen unter der Schulter, Beine gestreckt übereinander.",
+                a:["Hüfte hochschieben, bis der Körper eine gerade Linie ist.", "Oberer Arm an der Hüfte oder zur Decke.", "Halten, dann die andere Seite."],
+                f:["Hüfte sinkt ab.", "Oberkörper kippt nach vorne."],
+                at:"Ruhig weiteratmen.", v:"Seitstütz richtig ausführen"},
+    deadBug:   {s:"Rückenlage, Arme senkrecht zur Decke, Knie über der Hüfte und 90° gebeugt.",
+                a:["Unteren Rücken sanft an den Boden drücken.", "Einen Arm und das gegenüberliegende Bein langsam strecken, knapp über dem Boden.", "Zurück und die andere Seite."],
+                f:["Unterer Rücken hebt ab — dann weniger weit strecken.", "Zu schnell."],
+                at:"Beim Strecken ausatmen.", v:"Dead Bug Übung richtig ausführen"},
+    hollow:    {s:"Rückenlage, Arme über dem Kopf, Beine gestreckt.",
+                a:["Unteren Rücken fest an den Boden drücken.", "Schultern und Beine knapp vom Boden heben, Körper wie eine flache Banane.", "Halten — zu schwer: Knie beugen oder Arme neben den Körper."],
+                f:["Hohlkreuz, der Rücken verliert den Boden.", "Kopf in den Nacken."],
+                at:"Flach und ruhig weiteratmen.", v:"Hollow Body Hold richtig ausführen"},
+    knieHang:  {s:"Im gestreckten Hang, Schultern leicht aktiv.",
+                a:["Knie kontrolliert zur Brust ziehen, Becken rollt leicht ein.", "Oben kurz halten.", "Langsam ablassen, ohne zu pendeln."],
+                f:["Mit Schwung.", "Nur die Oberschenkel heben, das Becken bleibt starr."],
+                at:"Beim Hochziehen ausatmen.", v:"Hanging Knee Raise richtig ausführen"},
+    beinHang:  {s:"Im gestreckten Hang, Beine geschlossen.",
+                a:["Gestreckte Beine bis mindestens waagrecht heben.", "Oben kurz halten.", "Langsam ablassen und das Pendeln abfangen."],
+                f:["Schwung aus dem Pendeln.", "Knie beugen sich unbemerkt."],
+                at:"Beim Heben ausatmen.", v:"Hanging Leg Raise richtig ausführen"},
+    hampel:    {s:"Aufrecht, Füsse zusammen, Arme neben dem Körper.",
+                a:["Beine grätschen und Arme über den Kopf führen.", "Zurück in die Ausgangsstellung.", "Locker und gleichmässig wiederholen."],
+                f:["Auf den Fersen landen.", "Arme nur halb hoch."],
+                at:"Im Rhythmus weiteratmen."},
+    hoheKnie:  {s:"Aufrecht, auf den Fussballen, Arme angewinkelt.",
+                a:["Am Ort laufen, Knie bis Hüfthöhe.", "Arme laufen mit.", "Oberkörper bleibt aufrecht."],
+                f:["Knie nur halb hoch.", "Zurücklehnen."],
+                at:"Im Rhythmus weiteratmen.", v:"High Knees Übung"},
+    mountain:  {s:"Hohe Stützposition, Hände unter den Schultern.",
+                a:["Ein Knie zur Brust ziehen.", "Schnell wechseln, als ob du läufst.", "Hüfte bleibt auf Schulterhöhe."],
+                f:["Gesäss geht hoch.", "Hände wandern nach vorne."],
+                at:"Schnell, aber regelmässig weiteratmen.", v:"Mountain Climbers richtig ausführen"},
+    skater:    {s:"Auf einem Bein, leicht in den Knien, Oberkörper etwas vorgeneigt.",
+                a:["Seitlich aufs andere Bein springen.", "Weich landen, hinteres Bein kreuzt hinter dem Standbein.", "Gleich zurück zur anderen Seite."],
+                f:["Hart und steif landen.", "Knie fällt beim Landen nach innen."],
+                at:"Im Rhythmus weiteratmen.", v:"Skater Jumps richtig ausführen"},
+    burpee:    {s:"Aufrecht stehen, Füsse schulterbreit.",
+                a:["In die Hocke, Hände vor die Füsse.", "Füsse nach hinten in den Stütz springen (für mehr: Liegestütz).", "Füsse zurück zu den Händen, hochspringen, Arme über den Kopf."],
+                f:["Hüfte hängt im Stütz durch.", "Rücken rund beim Aufstehen."],
+                at:"Beim Hochspringen ausatmen.", v:"Burpees richtig ausführen"},
+    katzeKuh:  {s:"Vierfüssler, Hände unter den Schultern, Knie unter der Hüfte.",
+                a:["Rücken langsam rund machen, Kinn zur Brust.", "Dann Rücken sinken lassen, Brust nach vorne, Blick leicht hoch.", "Fliessend wechseln, Wirbel für Wirbel."],
+                f:["Zu schnell, ohne den Atem.", "Nur der Kopf bewegt sich."],
+                at:"Beim Runden ausatmen, beim Senken einatmen.", v:"Katze Kuh Übung"},
+    welt:      {s:"Tiefer Ausfallschritt, hinteres Knie am Boden oder knapp darüber.",
+                a:["Gleichseitige Hand innen neben den vorderen Fuss.", "Anderen Arm in einem Bogen zur Decke drehen, Blick folgt der Hand.", "Einige Atemzüge halten, dann Seite wechseln."],
+                f:["Vorderes Knie fällt nach innen.", "Drehen nur aus dem Arm statt aus dem Brustkorb."],
+                at:"Lang ausatmen und dabei tiefer drehen.", v:"World's Greatest Stretch"},
+    hueftb:    {s:"Halbkniend, ein Knie am Boden (weich unterlegen), anderer Fuss vorne.",
+                a:["Gesäss der Knieseite anspannen.", "Becken sanft nach vorne schieben, bis es vorne an der Hüfte zieht.", "Halten, Oberkörper aufrecht, dann Seite wechseln."],
+                f:["Hohlkreuz statt Becken nach vorne.", "Zu weit — es soll ziehen, nicht schmerzen."],
+                at:"Ruhig und lang ausatmen.", v:"Hüftbeuger dehnen kniend"},
+    bws:       {s:"Seitlage, Knie 90° angewinkelt übereinander, Arme vor dir gestreckt.",
+                a:["Oberen Arm in einem grossen Bogen über die Decke nach hinten öffnen.", "Knie bleiben zusammen am Boden.", "Kurz halten, zurück, nach den Wiederholungen Seite wechseln."],
+                f:["Knie rutschen auseinander.", "Mit Gewalt zum Boden drücken."],
+                at:"Beim Öffnen ausatmen.", v:"Brustwirbelsäule Rotation Seitlage"},
+    kind:      {s:"Kniestand, grosse Zehen berühren sich, Knie leicht auseinander.",
+                a:["Gesäss zu den Fersen sinken lassen.", "Arme weit nach vorne, Stirn zum Boden.", "Ruhig halten und loslassen."],
+                f:["Gesäss bleibt hoch — Kissen auf die Fersen hilft.", "Schultern hochgezogen."],
+                at:"Tief in den Rücken atmen.", v:"Kindhaltung Yoga"},
+    hams:      {s:"Stehend, eine Ferse leicht vor dir, Zehen hoch, Knie gestreckt.",
+                a:["Rücken lang, Hände auf dem anderen Oberschenkel.", "Aus der Hüfte nach vorne neigen, bis es hinten zieht.", "Halten, dann Seite wechseln."],
+                f:["Rücken rundet, um weiter zu kommen.", "Wippen."],
+                at:"Ruhig und lang ausatmen.", v:"Beinrückseite dehnen stehend"},
+    haengen:   {s:"An der Stange oder an Ringen hängen, Griff schulterbreit, Füsse frei.",
+                a:["Erst locker hängen lassen.", "Dann die Schultern sanft aktiv nach unten ziehen.", "Halten, bei Bedarf mit den Füssen entlasten."],
+                f:["Schultern ganz passiv bei Schmerzen — dann aktiv halten.", "Abspringen statt absteigen."],
+                at:"Ruhig weiteratmen.", v:"Dead Hang an der Stange"},
+    brustpresse:{s:"Sitz so einstellen, dass die Griffe auf Brusthöhe sind, Rücken an der Lehne.",
+                a:["Schulterblätter an die Lehne, Brust leicht raus.", "Griffe nach vorne drücken, ohne die Ellbogen ganz zu blockieren.", "Langsam zurück, bis eine leichte Dehnung in der Brust kommt."],
+                f:["Schultern rollen nach vorne.", "Gewicht knallt zurück."],
+                at:"Beim Drücken ausatmen, beim Zurückführen einatmen."},
+    khBank:    {s:"Rückenlage auf der Flachbank, Füsse fest am Boden, Hanteln über der Brust.",
+                a:["Schulterblätter zusammen und nach unten.", "Hanteln kontrolliert seitlich an die Brust senken, Ellbogen etwa 45° vom Körper.", "Hochdrücken, oben nicht zusammenschlagen."],
+                f:["Ellbogen ganz seitlich wie ein T.", "Gesäss hebt von der Bank."],
+                at:"Hinunter einatmen, hoch ausatmen.", v:"Kurzhantel Bankdrücken richtig ausführen"},
+    lhBank:    {s:"Auf der Bank, Augen unter der Stange, Griff etwas breiter als die Schultern, Füsse fest — mit Sicherung oder Partner.",
+                a:["Schulterblätter zusammen, Stange aus der Ablage über die Schultern bringen.", "Kontrolliert zur unteren Brust senken.", "Hochdrücken, leicht zurück über die Schultern."],
+                f:["Stange prallt von der Brust ab.", "Ohne Sicherung allein schwer.", "Handgelenke knicken nach hinten."],
+                at:"Vor dem Senken einatmen und Spannung halten, beim Drücken ausatmen.", v:"Bankdrücken Langhantel richtig ausführen"},
+    schraegBank:{s:"Bank auf 30–45°, Rücken an der Lehne, Hanteln über der oberen Brust.",
+                a:["Schulterblätter zurück und tief.", "Hanteln seitlich zur oberen Brust senken.", "Schräg nach oben drücken."],
+                f:["Bank zu steil — dann wird es Schulterdrücken.", "Ellbogen ganz seitlich."],
+                at:"Hinunter einatmen, hoch ausatmen.", v:"Schrägbankdrücken Kurzhantel richtig ausführen"},
+    schulterMa:{s:"Sitz so, dass die Griffe auf Schulterhöhe sind, Rücken an der Lehne.",
+                a:["Rumpf fest.", "Griffe gerade nach oben drücken.", "Langsam bis Schulterhöhe zurück."],
+                f:["Hohlkreuz, der Rücken verlässt die Lehne.", "Schultern zu den Ohren."],
+                at:"Beim Drücken ausatmen.", v:"Schulterpresse Maschine richtig ausführen"},
+    khSchulter:{s:"Sitzend mit Lehne oder stehend, Hanteln auf Schulterhöhe, Handflächen nach vorne.",
+                a:["Bauch und Gesäss fest.", "Hanteln über den Kopf drücken, oben fast zusammen.", "Kontrolliert zurück auf Schulterhöhe."],
+                f:["Hohlkreuz.", "Hanteln wandern weit nach vorne."],
+                at:"Beim Drücken ausatmen.", v:"Schulterdrücken Kurzhantel richtig ausführen"},
+    lhSchulter:{s:"Stehend, Stange vorne auf Schulterhöhe, Griff knapp schulterbreit, Füsse hüftbreit.",
+                a:["Gesäss und Bauch fest, Kopf leicht zurück.", "Stange gerade am Gesicht vorbei über den Kopf drücken.", "Oben Kopf durch die Arme, dann kontrolliert zurück."],
+                f:["Hohlkreuz durch Zurücklehnen.", "Schwung aus den Beinen."],
+                at:"Vor dem Drücken einatmen, oben ausatmen.", v:"Overhead Press Langhantel richtig ausführen"},
+    trizepsKabel:{s:"Vor dem Kabelzug, Seil oder Stange oben, Ellbogen am Körper.",
+                a:["Oberarme bleiben fest an der Seite.", "Unterarme nach unten strecken, bis die Arme gerade sind.", "Langsam zurück bis etwa 90°."],
+                f:["Ellbogen wandern nach vorne.", "Mit dem Oberkörper mitdrücken."],
+                at:"Beim Strecken ausatmen.", v:"Trizepsdrücken Kabel richtig ausführen"},
+    latzug:    {s:"Oberschenkel unter dem Polster, Stange etwas breiter als schulterbreit fassen.",
+                a:["Brust raus, leicht zurücklehnen.", "Schulterblätter nach unten, Stange zur oberen Brust ziehen.", "Langsam bis zu gestreckten Armen zurück."],
+                f:["Stange hinter den Nacken.", "Mit Schwung aus dem Oberkörper."],
+                at:"Beim Ziehen ausatmen.", v:"Latzug richtig ausführen"},
+    kabelRud:  {s:"Sitzend, Füsse an den Stützen, Knie leicht gebeugt, Griff mit gestreckten Armen.",
+                a:["Rücken gerade und aufrecht.", "Griff zum Bauch ziehen, Schulterblätter zusammen.", "Langsam nach vorne zurück, ohne den Rücken zu runden."],
+                f:["Oberkörper schaukelt vor und zurück.", "Schultern zu den Ohren."],
+                at:"Beim Ziehen ausatmen.", v:"Rudern am Kabel sitzend richtig ausführen"},
+    assKlimm:  {s:"Knie oder Füsse auf die Plattform, Griffe oben fassen, Gegengewicht passend eingestellt.",
+                a:["Schulterblätter nach unten ziehen.", "Hochziehen, bis das Kinn über den Griffen ist.", "Kontrolliert ablassen bis die Arme gestreckt sind."],
+                f:["Zu viel Hilfe — 8–10 saubere sollen schwer sein.", "Halbe Bewegung."],
+                at:"Beim Hochziehen ausatmen.", v:"Klimmzug Maschine Unterstützung"},
+    lhRud:     {s:"Stange schulterbreit fassen, Knie leicht gebeugt, Oberkörper etwa 45° vorgebeugt, Rücken gerade.",
+                a:["Rumpf fest, Rücken bleibt gerade.", "Stange zum Bauchnabel ziehen, Ellbogen nah am Körper.", "Kontrolliert ablassen."],
+                f:["Rücken rundet.", "Oberkörper richtet sich bei jeder Wiederholung auf."],
+                at:"Beim Ziehen ausatmen.", v:"Langhantelrudern vorgebeugt richtig ausführen"},
+    facePull:  {s:"Seil am Kabel auf Augenhöhe, mit beiden Händen fassen, einen Schritt zurück.",
+                a:["Seil zum Gesicht ziehen, Ellbogen hoch und aussen.", "Hinten die Hände nach aussen drehen, Schulterblätter zusammen.", "Langsam zurück."],
+                f:["Zu schwer — dann zieht der Rücken statt der Schultern.", "Ellbogen sinken unter die Hände."],
+                at:"Beim Ziehen ausatmen.", v:"Face Pull Kabel richtig ausführen"},
+    curl:      {s:"Aufrecht, Hanteln seitlich, Handflächen nach vorne, Ellbogen am Körper.",
+                a:["Hanteln ohne Schwung zur Schulter beugen.", "Oben kurz anspannen.", "Langsam ganz ablassen."],
+                f:["Schwung aus dem Rücken.", "Ellbogen wandern nach vorne."],
+                at:"Beim Beugen ausatmen.", v:"Bizepscurls Kurzhantel richtig ausführen"},
+    brustRud:  {s:"Brust an das Polster, Sitz so, dass die Griffe auf Schulterhöhe vor dir sind.",
+                a:["Griffe zum Körper ziehen, Ellbogen nach hinten.", "Oben kurz halten, Schulterblätter zusammen.", "Langsam zurück."],
+                f:["Brust verlässt das Polster.", "Schultern zu den Ohren."],
+                at:"Beim Ziehen ausatmen.", v:"Rudern Maschine brustgestützt"},
+    beinpresse:{s:"Rücken und Becken fest an der Lehne, Füsse schulterbreit mittig auf der Platte.",
+                a:["Sicherung lösen, Platte kontrolliert zu dir senken.", "So tief, wie das Becken unten liegen bleibt.", "Aus den Fersen wegdrücken, Knie nicht ganz durchstrecken."],
+                f:["Becken rollt unten ab.", "Knie fallen nach innen.", "Knie oben ganz durchgedrückt."],
+                at:"Hinunter einatmen, beim Drücken ausatmen.", v:"Beinpresse richtig ausführen"},
+    beinstreck:{s:"Sitz so, dass das Knie an der Drehachse liegt, Polster über dem Sprunggelenk.",
+                a:["Griffe fassen, Gesäss bleibt am Sitz.", "Beine langsam strecken, oben kurz halten.", "Kontrolliert zurück."],
+                f:["Mit Schwung.", "Gesäss hebt ab."],
+                at:"Beim Strecken ausatmen.", v:"Beinstrecker Maschine richtig ausführen"},
+    hackenschm:{s:"Rücken am Polster, Schultern unter den Polstern, Füsse schulterbreit auf der Platte.",
+                a:["Sicherung lösen.", "Tief und kontrolliert in die Kniebeuge.", "Aus den Fersen hochdrücken."],
+                f:["Fersen heben ab.", "Nur halb tief."],
+                at:"Hinunter einatmen, hoch ausatmen.", v:"Hackenschmidt Kniebeuge Maschine"},
+    lhHock:    {s:"Im Rack, Stange auf dem oberen Rücken, Füsse schulterbreit — Sicherungen knapp unter der tiefsten Position.",
+                a:["Einatmen, Rumpf fest, Brust hoch.", "Hüfte und Knie gleichzeitig beugen, Knie folgen den Zehen.", "Bis die Hüfte unter Kniehöhe ist, dann kräftig hoch."],
+                f:["Rücken rundet unten.", "Knie fallen nach innen.", "Ohne Sicherungen allein schwer."],
+                at:"Oben einatmen und halten, beim Hochkommen ausatmen.", v:"Kniebeuge Langhantel richtig ausführen"},
+    frontHock: {s:"Im Rack, Stange vorne auf den Schultern, Ellbogen hoch nach vorne.",
+                a:["Rumpf fest, aufrecht.", "Gerade nach unten tief sinken.", "Ellbogen bleiben hoch beim Hochdrücken."],
+                f:["Ellbogen sinken, die Stange rollt nach vorne.", "Oberkörper kippt."],
+                at:"Oben einatmen und halten, beim Hochkommen ausatmen.", v:"Frontkniebeuge richtig ausführen"},
+    stepUp:    {s:"Vor einem stabilen Kasten oder einer Bank, etwa Kniehöhe.",
+                a:["Ganzen Fuss auf den Kasten.", "Mit dem oberen Bein hochdrücken, das untere hilft möglichst wenig.", "Kontrolliert zurück — erst alle auf einer Seite, dann wechseln."],
+                f:["Vom unteren Bein abspringen.", "Knie fällt nach innen."],
+                at:"Hoch ausatmen.", v:"Step Ups richtig ausführen"},
+    khAusfall: {s:"Aufrecht, Hanteln seitlich in den Händen, Füsse hüftbreit.",
+                a:["Grosser Schritt nach vorne.", "Hinteres Knie Richtung Boden, Oberkörper aufrecht.", "Vorne abdrücken und zurück, Seite wechseln."],
+                f:["Schritt zu kurz, das Knie schiebt weit nach vorne.", "Oberkörper kippt."],
+                at:"Hinunter einatmen, hoch ausatmen.", v:"Ausfallschritte Kurzhantel richtig ausführen"},
+    beinbeug:  {s:"Liegend oder sitzend, Knie an der Drehachse, Polster über der Ferse.",
+                a:["Hüfte fest an der Polsterung.", "Beine beugen, so weit es geht.", "Langsam zurück."],
+                f:["Hüfte hebt ab.", "Mit Schwung."],
+                at:"Beim Beugen ausatmen.", v:"Beinbeuger Maschine richtig ausführen"},
+    lhHip:     {s:"Schultern an der Bank, Stange gepolstert über der Hüfte, Füsse hüftbreit.",
+                a:["Kinn leicht zur Brust.", "Hüfte ganz strecken, bis der Oberkörper waagrecht ist.", "Oben Gesäss anspannen, kontrolliert senken."],
+                f:["Hohlkreuz oben.", "Stange ohne Polster."],
+                at:"Hoch ausatmen, hinunter einatmen.", v:"Hip Thrust Langhantel richtig ausführen"},
+    lhRdl:     {s:"Aufrecht, Stange vor den Oberschenkeln, Griff schulterbreit, Knie leicht gebeugt.",
+                a:["Hüfte nach hinten schieben, Rücken bleibt gerade.", "Stange nah an den Beinen bis etwa Mitte Schienbein.", "Aus der Hüfte aufrichten."],
+                f:["Rücken rundet.", "Stange entfernt sich von den Beinen."],
+                at:"Hinunter einatmen, hoch ausatmen.", v:"Rumänisches Kreuzheben Langhantel"},
+    kreuzheben:{s:"Stange über dem Mittelfuss, Füsse hüftbreit, Griff knapp ausserhalb der Beine.",
+                a:["Hüfte senken, Rücken gerade, Brust hoch, Arme gestreckt.", "Aus den Beinen hochdrücken, die Stange bleibt nah am Körper.", "Oben aufrecht, dann kontrolliert gleich zurück."],
+                f:["Rücken rundet — Technik vor Gewicht.", "Hüfte schiesst zuerst hoch.", "Oben zurücklehnen."],
+                at:"Unten einatmen und Spannung halten, oben ausatmen.", v:"Kreuzheben richtig ausführen"},
+    wadenMa:   {s:"An der Wadenmaschine, Fussballen auf der Kante, Schultern unter den Polstern.",
+                a:["Fersen langsam ganz tief senken.", "So hoch wie möglich drücken.", "Oben 1 Sekunde halten."],
+                f:["Wippen.", "Knie beugen mit."],
+                at:"Hoch ausatmen.", v:"Wadenheben Maschine richtig ausführen"},
+    kabelCrunch:{s:"Vor dem Kabelzug knien, Seil oben, Hände neben dem Kopf.",
+                a:["Hüfte bleibt ruhig über den Knien.", "Oberkörper Richtung Knie einrollen.", "Langsam wieder aufrollen."],
+                f:["Aus der Hüfte ziehen statt einrollen.", "Mit den Armen ziehen."],
+                at:"Beim Einrollen ausatmen.", v:"Kabel Crunch kniend richtig ausführen"},
+    pallof:    {s:"Seitlich zum Kabel oder Band, Griff vor der Brust, Füsse schulterbreit.",
+                a:["Rumpf fest.", "Griff gerade nach vorne drücken, der Zug will dich drehen — nicht nachgeben.", "Kurz halten, zurück, dann andere Seite."],
+                f:["Oberkörper dreht mit.", "Zu weit weg vom Kabel."],
+                at:"Beim Drücken ausatmen.", v:"Pallof Press richtig ausführen"},
+    abRoller:  {s:"Kniend, Roller unter den Schultern, Arme gestreckt.",
+                a:["Bauch fest, Becken leicht eingerollt.", "Langsam nach vorne rollen, so weit der Rücken gerade bleibt.", "Aus dem Bauch zurückziehen."],
+                f:["Hohlkreuz.", "Zu weit am Anfang."],
+                at:"Hinaus einatmen, zurück ausatmen.", v:"Bauchroller richtig ausführen"},
+    rudergeraet:{s:"Füsse in den Schlaufen, Griff mit gestreckten Armen, Knie gebeugt.",
+                a:["Zuerst die Beine strecken.", "Dann leicht zurücklehnen und den Griff zum unteren Brustkorb ziehen.", "Zurück in umgekehrter Reihenfolge: Arme, Oberkörper, Beine."],
+                f:["Zuerst mit den Armen ziehen.", "Rücken rundet."],
+                at:"Beim Ziehen ausatmen, beim Vorrollen einatmen.", v:"Rudergerät richtige Technik"},
+    crosstrainer:{s:"Aufrecht auf den Pedalen, Griffe locker fassen.",
+                a:["Zügig treten, Arme schieben und ziehen mit.", "Widerstand so, dass Sprechen gerade noch geht.", "Aufrecht bleiben."],
+                f:["Auf die Griffe stützen.", "Widerstand zu tief, nur Schwung."],
+                at:"Gleichmässig weiteratmen.", v:"Crosstrainer richtig benutzen"},
+    airbike:   {s:"Sattel auf Hüfthöhe, Griffe fassen, Füsse auf den Pedalen.",
+                a:["Arme und Beine treiben zusammen.", "Im Intervall voll treten, in der Pause locker.", "Oberkörper ruhig."],
+                f:["Nur aus den Beinen.", "Sattel zu tief."],
+                at:"Im Intervall kräftig und regelmässig atmen.", v:"Air Bike Intervall"},
+  },
   uebKetten: {
     druck:   [["wandLs",0],["knieLs",1],["schraegLs",1],["brustpresse",1],["ls",2],["khBank",2],["engLs",3],["lhBank",3],
               ["schraegBank",3],["fussLs",4],["archerLs",5]],
@@ -1606,6 +1957,9 @@ const CONFIG = {
     mobA:  {n:"Beweglichkeit", g:["mobil","mobil","mobil","mobil","mobil","mobil","mobil"]},
   },
   doppelPause: 45,        // Sekunden zwischen den Sätzen beim Nachholen
+  // Supersätze (1.14.0): Gegenspieler im Wechsel; Wechsel = Sekunden von A zu B, die Pause kommt nach B
+  supersatzPaare: [["druck","zug"],["druck2","zug2"],["knie","huefte"],["einbein","huefte"],["rumpf","seite"]],
+  supersatzWechsel: 15,
   /* Eigene Trainings als Text, eine Zeile je Strecke oder Übung: „[Teil:] [N×] Text [| Pause 2 min]“.
      Marco, 26.10.2026: „aufwärmen 100 kraul, 100m brust, training: 2x100m technik (kraul) 3x (4x50m (25m
      sprint volle power, 25m locker) 2min pause), 300m kraul, 200m kraul, 100m ausschwimmen“. */
@@ -3126,7 +3480,7 @@ function cortanaUebernehmen(tage, plan, auswahl){
    Doppel-Up, Fitnessstudio, eigene Trainings (sein Schwimmen). Entwurf: Entwurf/Entwurf-Training.html.
    Alles hier ist rein: der Plan kommt als Argument, nichts liest STATE. Ein absolviertes Training wird
    eine gewöhnliche Aktivität im Tag (trainingEintrag) — die kcal rechnet trainingKcal() wie immer. */
-function trainingPlanVorgabe(){ return {ziel:"fett", modus:"saetze", stufe:"fort", tage:[0, 2, 4], dauer:30, aus:["kg"]}; }
+function trainingPlanVorgabe(){ return {ziel:"fett", modus:"saetze", stufe:"fort", tage:[0, 2, 4], dauer:30, aus:["kg"], supersatz:true}; }
 function trainingVorgabe(){ return {plan:trainingPlanVorgabe(), stufeDelta:{}, coach:0, best:{}, doppel:{}, erledigt:{}, eigene:[], koennen:{}}; }
 
 /** Die Form, die wirklich gilt: Beweglichkeit hat nur eine; Kondition kennt keine Sätze mit langen Pausen. */
@@ -3199,6 +3553,13 @@ function trainingMax(id, g, koennen){
     if (!best || Math.abs(ab) < Math.abs(best.ab)) best = {t, w, ab};
   }
   return best ? {w:Math.round(best.w * Math.pow(CONFIG.trainingSchwerer, best.ab)), gemessen:false, von:best.t} : null;
+}
+/** Video zur Übung (1.15.0): ein Link zur YouTube-Suche, keine fremden Inhalte in der App — sie bleibt offline,
+    und ein Suchlink veraltet nicht wie ein fester Link auf ein einzelnes Video. */
+function trainingVideoUrl(id){
+  const a = CONFIG.uebAnleitung[id] || {}, n = CONFIG.uebungen[id] ? CONFIG.uebungen[id].n : id;
+  const q = a.v || n.split("(").join(" ").split(")").join("").split("  ").join(" ").trim() + " richtig ausführen";
+  return "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
 }
 /** Antworten der Befragung übernehmen ({übung: Eingabe}): leer lässt den alten Wert, 0 ist eine Angabe. */
 function einstufungSetzen(koennen, antworten, d){
@@ -3283,29 +3644,76 @@ function trainingTag(plan, vorlage, extra){
                                     trainingSatzVorgabe(u, Z, modus, basis, max)));
     });
   }
-  // 2. So viele Übungen, wie mit den vorgesehenen Sätzen hineinpassen — mindestens 3, höchstens 8
-  const liste = [];
-  let summe = 0;
-  for (const u of kandidaten){
-    if (liste.length >= 8 || (liste.length >= 3 && summe + trainingUebZeit(u) > haupt + 60)) break;
-    liste.push(u); summe += trainingUebZeit(u);
-  }
-  // 3. Sätze bzw. Runden angleichen, bis die Dauer passt: lange Trainings mehr, kurze weniger.
-  //    Bei „Runden auf Zeit“ für alle gleich, sonst reihum. Doppel-Up hat keine festen Sätze.
+  // 1b. Rumpf gehört dazu (1.14.0; Marco, 27.10.2026: „core übungen?“). Die erste Rumpfübung rückt so weit
+  //     nach vorn, dass sie in den Mindestumfang fällt — vorher stand sie an fünfter Stelle und fiel als erste weg.
+  const minN = modus === "doppel" ? 3 : dauer >= 30 ? 5 : dauer >= 20 ? 4 : 3;
+  const ri = kandidaten.findIndex(u => u.g === "rumpf" || u.g === "seite");
+  if (ri > minN - 1) kandidaten.splice(minN - 1, 0, kandidaten.splice(ri, 1)[0]);
+
+  // Supersätze: Gegenspieler im Wechsel (Drücken ↔ Ziehen …), die Pause kommt erst nach beiden. Nur bei
+  // „Sätze & Pausen“; was keinen Gegenspieler hat, paart sich mit der nächsten freien Übung (andere Muskeln).
+  const mitSuper = modus === "saetze" && plan.supersatz !== false;
+  const gegen = (a, b) => CONFIG.supersatzPaare.some(([x, y]) => (x === a.g && y === b.g) || (y === a.g && x === b.g));
+  const bloecke = liste => {
+    if (!mitSuper) return liste.map(u => [u]);
+    const kraft = liste.filter(u => u.g !== "kond" && u.g !== "mobil"), weg = new Set(), b = [];
+    for (const u of kraft){
+      if (weg.has(u)) continue;
+      weg.add(u);
+      const p = kraft.find(x => !weg.has(x) && gegen(u, x));
+      if (p){ weg.add(p); b.push([u, p]); } else b.push([u]);
+    }
+    const aus = [];
+    let offen = null;
+    for (const x of b){
+      if (x.length === 2) aus.push(x);
+      else if (offen){ offen.push(x[0]); offen = null; }
+      else { offen = x; aus.push(x); }
+    }
+    return aus.concat(liste.filter(u => kraft.indexOf(u) < 0).map(u => [u]));
+  };
+  const arbeit = u => u.art === "sek" ? u.wert : u.wert * 3;
+  const blockZeit = b => b.length === 1 ? trainingUebZeit(b[0])
+    : b[0].saetze * (arbeit(b[0]) + arbeit(b[1]) + CONFIG.supersatzWechsel) + (b[0].saetze - 1) * b[0].pause + 20;
+  const zeitVon = bl => bl.reduce((a, b) => a + blockZeit(b), 0);
+
+  // 2. Übungen wählen: so viele, wie mit (höchstens) 3 Sätzen hineinpassen — mindestens minN, höchstens 8.
+  //    Bis 1.13.0 wurde mit den vollen Sätzen des Ziels gefüllt: bei Muskelaufbau 30 min nur 3 Übungen.
   const MIN = 2, MAX = modus === "mobil" ? 4 : 6, gleich = modus === "zeit";
-  const zeit = () => liste.reduce((a, u) => a + trainingUebZeit(u), 0);
+  const P = Math.max(MIN, Math.min(3, kandidaten.length ? kandidaten[0].saetze : 3));
+  const mitSaetzen = (l, n) => l.map(u => Object.assign({}, u, {saetze:modus === "doppel" ? u.saetze : n}));
+  let anzahl = Math.min(kandidaten.length, minN);
+  while (anzahl < Math.min(8, kandidaten.length)
+         && zeitVon(bloecke(mitSaetzen(kandidaten.slice(0, anzahl + 1), P))) <= haupt + 60) anzahl++;
+  const bl = bloecke(mitSaetzen(kandidaten.slice(0, anzahl), P));
+
+  // 3. Sätze bzw. Runden angleichen, bis die Dauer passt: lange Trainings mehr, kurze weniger.
+  //    Bei „Runden auf Zeit“ für alle gleich, sonst reihum; ein Supersatz zählt als ein Block.
+  //    Mehr nur, wenn es nicht übers Ziel hinausschiesst — sonst pendelte ein ganzer Supersatz hin und her.
+  const zeit = () => zeitVon(bl);
+  const plus = (b, d) => b.forEach(u => { u.saetze += d; });
   for (let schritt = 0; schritt < 80 && modus !== "doppel"; schritt++){
     const t = zeit();
     if (t < haupt - 90){
-      const kann = liste.filter(u => u.saetze < MAX);
-      if (!kann.length) break;
-      if (gleich) liste.forEach(u => u.saetze++); else kann.sort((a, b) => a.saetze - b.saetze)[0].saetze++;
+      const passt = b => { plus(b, 1); const ok = zeit() <= haupt + 60; plus(b, -1); return ok; };
+      if (gleich){
+        if (!bl.every(b => b[0].saetze < MAX)) break;
+        bl.forEach(b => plus(b, 1));
+        if (zeit() > haupt + 60){ bl.forEach(b => plus(b, -1)); break; }
+      } else {
+        const kann = bl.filter(b => b[0].saetze < MAX && passt(b));
+        if (!kann.length) break;
+        plus(kann.sort((a, b) => a[0].saetze - b[0].saetze)[0], 1);
+      }
     } else if (t > haupt + 60){
-      const kann = liste.filter(u => u.saetze > MIN);
+      const kann = bl.filter(b => b[0].saetze > MIN);
       if (!kann.length) break;
-      if (gleich) liste.forEach(u => u.saetze--); else kann.sort((a, b) => b.saetze - a.saetze)[0].saetze--;
+      if (gleich) bl.forEach(b => plus(b, -1)); else plus(kann.sort((a, b) => b[0].saetze - a[0].saetze)[0], -1);
     } else break;
   }
+  let nr = 0;
+  bl.forEach(b => { if (b.length === 2){ nr++; b.forEach(u => { u.ss = nr; }); } });
+  const liste = [].concat(...bl);
   // Finisher beim Fettziel: ein kurzer Zirkel am Schluss
   let finisher = null;
   if (mitFinisher){
@@ -3327,7 +3735,7 @@ function trainingZuKurz(tr, dauer){ return tr.dauer < (zahl(dauer) || 0) - 4; }
     hintereinander, nie eine Pause am Ende des Hauptteils. */
 function trainingSchritte(tr){
   const s = [{typ:"warm", n:"Aufwärmen", sek:tr.auf, text:"Gelenke kreisen, 1 min Hampelmann, 10 Kniebeugen, 10 Armkreisen."}];
-  const satz = (u, i, von, runde) => ({typ:"satz", id:u.id, n:u.n, satzNr:i, von, runde,
+  const satz = (u, i, von, runde) => ({typ:"satz", id:u.id, n:u.n, satzNr:i, von, runde, ss:u.ss || null,
     sek:u.art === "sek" ? u.wert : null, ziel:u.wert + (u.art === "sek" ? " s" : " Wdh")});
   if (tr.modus === "zeit"){
     const runden = tr.liste.length ? tr.liste[0].saetze : 0;
@@ -3338,11 +3746,18 @@ function trainingSchritte(tr){
       if (j < tr.liste.length - 1) s.push({typ:"pause", n:"Pause", sek:u.pause});
     });
   } else {
-    tr.liste.forEach((u, j) => {
-      for (let i = 1; i <= u.saetze; i++){
-        s.push(satz(u, i, u.saetze, false));
-        if (!(j === tr.liste.length - 1 && i === u.saetze))
-          s.push({typ:"pause", n:"Pause", sek:i < u.saetze ? u.pause : Math.max(30, u.pause)});
+    // Blöcke: eine Übung allein oder ein Supersatz (gleiche ss nacheinander) — A, Wechsel, B, Pause, A …
+    const bl = [];
+    tr.liste.forEach(u => { const l = bl[bl.length - 1]; if (u.ss && l && l[0].ss === u.ss) l.push(u); else bl.push([u]); });
+    bl.forEach((b, j) => {
+      const n = b[0].saetze;
+      for (let i = 1; i <= n; i++){
+        b.forEach((u, k) => {
+          s.push(satz(u, i, n, false));
+          if (k < b.length - 1) s.push({typ:"pause", n:"Wechsel", sek:CONFIG.supersatzWechsel, wechsel:true});
+        });
+        if (!(j === bl.length - 1 && i === n))
+          s.push({typ:"pause", n:"Pause", sek:i < n ? b[0].pause : Math.max(30, b[0].pause)});
       }
     });
   }
@@ -3610,7 +4025,7 @@ function stateVorgabe(){
   };
 }
 
-const VERSION = "1.13.0";
+const VERSION = "1.15.0";
 
 let STATE = stateVorgabe();
 /* Naehrwerte: am PC aus naehrwerte.js neben der Datei, in der App ueber die Webadresse vom Server
@@ -5818,6 +6233,10 @@ function trainingZeichnen(){
           w => p.ziel === w, w => { p.ziel = w; STATE.training.stufeDelta = {}; });
   trChips("trModus", "Form", CONFIG.trainingModi.map(([k, n]) => [k, n, p.ziel === "mobil" || (p.ziel === "kond" && (k === "saetze" || k === "doppel"))]),
           w => p.ziel !== "mobil" && m === w, w => { p.modus = w; });
+  // Supersätze nur bei „Sätze & Pausen“ — sonst gibt es keine Pausen, die man sparen könnte
+  $("trSuper").hidden = m !== "saetze";
+  trChips("trSuper", "Supersätze", [[true, "an: Gegenspieler im Wechsel"], [false, "aus"]], w => (p.supersatz !== false) === w,
+          w => { p.supersatz = w; });
   trChips("trStufe", "Stufe", CONFIG.trainingStufen.map(s => [s.id, s.n]), w => p.stufe === w,
           w => { p.stufe = w; STATE.training.stufeDelta = {}; STATE.training.coach = 0; });
   trChips("trTage", "Tage", WT_KURZ.map((t, i) => [i, t]), w => p.tage.indexOf(w) >= 0,
@@ -5945,11 +6364,15 @@ function trUebersichtHtml(tr, v){
     : tr.modus === "doppel" ? '<div class="trteil">Hauptteil · Doppel-Up</div><p class="explain">Je Übung: einmal so viele wie möglich, '
         + 'dann die doppelte Menge in so wenigen Sätzen wie möglich.</p>'
     : '<div class="trteil">Hauptteil</div>';
-  for (const u of tr.liste){
+  tr.liste.forEach((u, j) => {
     const d = STATE.training.doppel[u.id], sek = u.art === "sek";
+    // Supersatz: Kopf vor dem ersten der beiden, die Pause steht dort und nicht bei jeder Übung
+    const ersterImPaar = u.ss && (j === 0 || tr.liste[j - 1].ss !== u.ss);
+    if (ersterImPaar) h += '<div class="trss">Supersatz ' + u.ss + ' · im Wechsel, ' + CONFIG.supersatzWechsel
+      + ' s zum Wechseln, Pause ' + u.pause + ' s nach beiden</div>';
     const vg = tr.modus === "doppel" ? (d ? "zuletzt " + d.max + (sek ? " s" : "") + " → " + 2 * d.max + " in " + d.saetze + " Sätzen" : "Maximum, dann doppelt")
       : tr.modus === "zeit" ? u.wert + (sek ? " s" : " Wdh") + " je Runde"
-      : u.saetze + " × " + u.wert + (sek ? " s" : " Wdh") + (u.pause ? " · Pause " + u.pause + " s" : "");
+      : u.saetze + " × " + u.wert + (sek ? " s" : " Wdh") + (u.pause && !u.ss ? " · Pause " + u.pause + " s" : "");
     const stufe = u.g !== "mobil" && u.g !== "kond";
     // die Schwierigkeit 0–5 wie in der Übungsliste — die Stelle in der Kette hinge an der Ausrüstung
     const l = (CONFIG.uebKetten[u.g].find(x => x[0] === u.id) || [0, 0])[1];
@@ -5964,17 +6387,17 @@ function trUebersichtHtml(tr, v){
         mx += " — über " + Z.wdh[1] + " je Satz: ▲ schwerer wirkt mehr"; warn = true;
       }
     }
-    h += '<div class="trueb"><span class="n">' + esc(u.n) + '<small>' + (stufe ? "Schwierigkeit " + l + "/5" : "") + '</small></span>'
+    h += '<div class="trueb' + (u.ss ? " ss" : "") + '"><span class="n">' + esc(u.n) + '<small>' + (stufe ? "Schwierigkeit " + l + "/5" : "") + '</small></span>'
       + '<span class="vg">' + vg + '</span>'
       + (mx ? '<span class="mx' + (warn ? " warn" : "") + '">' + esc(mx) + '</span>' : "")
       + (stufe ? '<div class="stufe"><button type="button" class="btn mini" data-s="' + u.schluessel + '" data-d="-1"' + (u.idx === 0 ? " disabled" : "")
           + '>▼ leichter</button><button type="button" class="btn mini" data-s="' + u.schluessel + '" data-d="1"'
           + (u.idx === u.kette.length - 1 ? " disabled" : "") + '>▲ schwerer</button>'
           + (mitMax ? '<button type="button" class="btn mini" data-m="' + esc(u.id) + '">✎ Maximum</button>' : "") + '</div>' : "")
-      + '<details><summary>So geht es</summary>' + esc(CONFIG.uebungen[u.id].tipp)
+      + '<details><summary>So geht es · Video</summary>' + trAnleitungHtml(u.id)
       + (stufe ? '<div class="kette">Stufen: ' + u.kette.map((id, i) => i === u.idx ? "<b>" + esc(CONFIG.uebungen[id].n) + "</b>" : esc(CONFIG.uebungen[id].n)).join(" → ") + '</div>' : "")
       + '</details></div>';
-  }
+  });
   if (tr.finisher) h += '<div class="trteil">Finisher · 4 min</div><p class="explain">' + esc(tr.finisher.text) + '</p>';
   if (tr.ab) h += '<div class="trteil">Abkühlen · ' + Math.round(tr.ab / 60) + ' min</div>';
   if (trainingZuKurz(tr, trPlan().dauer))
@@ -6061,6 +6484,19 @@ async function trEigenOhneAblauf(e){
   trEintragen({art:e.art, n:e.n, id:e.id}, min ? min * 60 : null, l.meter || null, min === "" ? "" : null);
 }
 
+/* ---- Anleitung und Video (1.15.0) ---- */
+function trAnleitungHtml(id){
+  const a = CONFIG.uebAnleitung[id];
+  if (!a) return esc(CONFIG.uebungen[id].tipp);
+  return '<div class="anl"><p><b>Ausgangsposition:</b> ' + esc(a.s) + '</p>'
+    + '<ol>' + a.a.map(x => '<li>' + esc(x) + '</li>').join("") + '</ol>'
+    + '<p class="tp">' + esc(CONFIG.uebungen[id].tipp) + '</p>'
+    + '<p><b>Häufige Fehler:</b></p><ul>' + a.f.map(x => '<li>' + esc(x) + '</li>').join("") + '</ul>'
+    + '<p><b>Atmung:</b> ' + esc(a.at) + '</p>'
+    + '<a class="btn mini vid" href="' + esc(trainingVideoUrl(id)) + '" target="_blank" rel="noopener noreferrer">▶ Video ansehen</a>'
+    + ' <span class="explain">öffnet die Suche auf YouTube (braucht Netz)</span></div>';
+}
+
 /* ---- Übungsliste ---- */
 function trUebungslisteZeichnen(){
   const p = trPlan(), da = trainingVorhanden(p);
@@ -6075,7 +6511,8 @@ function trUebungslisteZeichnen(){
     h += '<div class="trgruppe"><h3>' + esc(g.n) + '</h3><div class="trlist">' + liste.map(u =>
       '<div class="e' + (hat(u) ? "" : " fehlt") + '"><div class="k"><b>' + esc(u.n) + '</b><span class="s">Schwierigkeit ' + u.l + '/5 · '
       + (u.art === "sek" ? "Sekunden" : "Wiederholungen") + '</span></div><div class="t">' + esc(u.tipp) + '</div>'
-      + '<div class="a">' + (u.aus ? u.aus.map(name).join(" oder ") : "Körpergewicht") + '</div></div>').join("") + '</div></div>';
+      + '<div class="a">' + (u.aus ? u.aus.map(name).join(" oder ") : "Körpergewicht") + '</div>'
+      + '<details><summary>Anleitung und Video</summary>' + trAnleitungHtml(u.id) + '</details></div>').join("") + '</div></div>';
   }
   $("trUebungen").innerHTML = h || '<p class="explain">Keine Übung gefunden.</p>';
   $("trListeHint").textContent = Object.keys(CONFIG.uebungen).length + " Übungen" + (such || nur ? " · " + n + " angezeigt" : "");
@@ -6184,12 +6621,15 @@ function trZeichnenSchritt(){
   const knopf = (text, gruen) => { $("wFuss").innerHTML = '<button type="button" class="btn ' + (gruen ? "gruen" : "primary") + '" id="wFertig">' + text + '</button>'; };
   if (s.typ === "satz"){
     const u = CONFIG.uebungen[s.id];
-    $("wArt").textContent = s.runde ? "Runde " + s.satzNr + " von " + s.von + " · auf Zeit" : "Satz " + s.satzNr + " von " + s.von;
+    $("wArt").textContent = s.runde ? "Runde " + s.satzNr + " von " + s.von + " · auf Zeit"
+      : (s.ss ? "Supersatz " + s.ss + " · " : "") + "Satz " + s.satzNr + " von " + s.von;
     $("wName").textContent = s.n;
     $("wZiel").textContent = s.ziel + (trW.info.tr && trW.info.tr.modus === "intervall" ? " arbeiten" : "");
     $("wText").innerHTML = (trainingIstGeraet(s.id) ? "Gewicht so wählen, dass die letzten 2 Wiederholungen schwer, aber sauber sind.<br>" : "")
-      + '<details><summary>So geht es</summary>' + esc(u.tipp) + '</details>';
+      + '<details><summary>So geht es · Video</summary>' + trAnleitungHtml(s.id) + '</details>';
     $("wWeiter").textContent = !naechster ? "Letzte Übung"
+      : s.ss && naechster.ss === s.ss && naechster.satzNr === s.satzNr ? "Danach gleich im Wechsel: " + naechster.n
+      : s.ss && naechster.ss === s.ss ? "Danach: Pause, dann Satz " + naechster.satzNr + " von " + naechster.von + " · " + naechster.n
       : naechster.id === s.id && !s.runde ? "Danach: Pause, dann Satz " + naechster.satzNr + " von " + naechster.von
       : "Danach: " + naechster.n;
     knopf(s.sek === null ? "Fertig ✓" : "Fertig, weiter ✓");
@@ -6201,8 +6641,8 @@ function trZeichnenSchritt(){
     $("wWeiter").textContent = naechster ? "Danach: " + naechster.n : "Letzter Teil";
     knopf("Fertig ✓");
   } else if (s.typ === "pause"){
-    $("wArt").textContent = "Pause";
-    $("wName").textContent = "Durchatmen";
+    $("wArt").textContent = s.wechsel ? "Wechsel" : "Pause";
+    $("wName").textContent = s.wechsel ? "Zur nächsten Übung" : "Durchatmen";
     $("wZiel").textContent = "";
     $("wText").textContent = "";
     const nd = trW.liste[trW.i + 1];
