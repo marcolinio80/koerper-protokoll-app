@@ -621,6 +621,27 @@ body.geraet #serverPanel{display:block}
 #dlgMenue .eintrag .i{font-size:19px;width:28px;text-align:center;color:var(--accent);flex:none}
 #dlgMenue .eintrag b{display:block;font-size:14px;font-weight:600}
 #dlgMenue .eintrag small{color:var(--ink-3);font-size:12px}
+/* Bild teilen (1.19.0): Vorschau im Dialog, die Tageskarte wird ausserhalb des Bildschirms aufgebaut */
+#dlgBild{width:min(520px,calc(100vw - 24px))}
+#dlgBild .bildvorschau{max-height:62vh;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--sunken)}
+#dlgBild .bildvorschau img{display:block;width:100%;height:auto}
+#dlgBild .bildvorschau p{margin:0;padding:28px 16px;text-align:center;color:var(--ink-3);font-size:13px}
+.bildbuehne{position:absolute;left:-100000px;top:0;width:420px;pointer-events:none}
+.bildkarte{background:var(--paper);color:var(--ink);padding:18px;display:flex;flex-direction:column;gap:14px}
+.bildkarte .bk-kopf{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  border-bottom:1px solid var(--line);padding-bottom:10px}
+.bildkarte .bk-kopf b{font-size:16px}
+.bildkarte .bk-kopf span{color:var(--ink-2);font-size:13px;text-align:right}
+.bildkarte .bk-block{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.bildkarte .bk-titel{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+.bildkarte table{width:100%;border-collapse:collapse;font-size:13px}
+.bildkarte td{padding:3px 0;vertical-align:top}
+.bildkarte td.z{text-align:right;white-space:nowrap;padding-left:10px;font-variant-numeric:tabular-nums}
+.bildkarte tr.gr td{padding-top:9px;font-weight:700;color:var(--ink-2);font-size:12px}
+.bildkarte tr.gr:first-child td{padding-top:0}
+.bildkarte .bk-zeile{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:2px 0}
+.bildkarte .bk-zeile span:first-child{color:var(--ink-3)}
+.bildkarte .bk-fuss{color:var(--ink-3);font-size:11px;text-align:center}
 
 /* ---------- Handy: schmaler Bildschirm ----------
    Dieselbe Anwendung, anders angeordnet: der Tag zuerst, Tabs unten, Essen als
@@ -1396,6 +1417,20 @@ body.geraet #serverPanel{display:block}
   <div class="body">
     <div id="menueListe"></div>
     <div class="dlgfoot"><button class="btn ghost" id="menueZu">Schliessen</button></div>
+  </div>
+</dialog>
+
+<!-- Bild teilen (1.19.0): Vorschau, dann Teilen (Android-Menü) oder Speichern -->
+<dialog id="dlgBild">
+  <h2 id="bildTitel">Bild</h2>
+  <div class="body">
+    <div class="bildvorschau" id="bildVorschau"></div>
+    <p class="explain" id="bildText" style="margin:10px 0"></p>
+    <div class="dlgfoot">
+      <button class="btn ghost" id="bildZu">Schliessen</button>
+      <button class="btn" id="bildSpeichern" disabled>Speichern</button>
+      <button class="btn primary" id="bildTeilen" disabled>Teilen</button>
+    </div>
   </div>
 </dialog>
 
@@ -4010,6 +4045,41 @@ function trainingUebungsliste(){
     uebungen:CONFIG.uebKetten[g].map(x => Object.assign({id:x[0], l:x[1]}, CONFIG.uebungen[x[0]]))}));
 }
 
+/* ---------------- Bild teilen (1.19.0) ----------------
+   Marco, 29.10.2026: „baue bitte eine screenshot funktion ein auf dem handy“ — auf Rückfrage beides: den Tag
+   als Bild und die ganze Ansicht. Ein Browser darf den Bildschirm nicht abfotografieren; die App zeichnet die
+   Ansicht selbst nach (Schicht 5, bildVonElement). Hier: was ins Bild kommt und wie gross es werden darf. */
+
+/** Massstab fuer das Bild: so scharf wie der Bildschirm, hoechstens doppelt; nie mehr als 16 Mio. Bildpunkte und
+    16 000 px Hoehe — ein groesseres Canvas zeichnet Chrome am Handy still leer. null, wenn nichts zu zeichnen ist. */
+function bildMassstab(breite, hoehe, dpr){
+  if (!(breite > 0) || !(hoehe > 0)) return null;
+  let m = Math.min(2, Math.max(1, zahl(dpr) || 1));
+  m = Math.min(m, Math.sqrt(16e6 / (breite * hoehe)), 16000 / hoehe, 16000 / breite);
+  return Math.round(m * 1000) / 1000;
+}
+
+/** „Koerper-Tag-2026-10-29.png“ — ohne Umlaut und Leerzeichen, das nimmt jede App beim Teilen. */
+function bildDateiname(was, datum){
+  const w = String(was || "Ansicht");
+  return "Koerper-" + w.charAt(0).toUpperCase() + w.slice(1) + "-" + datum + ".png";
+}
+
+/** Essen des Tages fuer das Bild: je Mahlzeit in der Reihenfolge von CONFIG.mahlzeiten, Zeilen ohne Mahlzeit am
+    Schluss. Fehlt bei einer Zeile der Wert, bleibt die Summe der Mahlzeit offen (null) — keine 0 (Regel 2). */
+function tagBildEssen(e){
+  const zeilen = (e && Array.isArray(e.mahl)) ? e.mahl.filter(z => z && (z.t || zahl(z.kcal) !== null)) : [];
+  const namen = CONFIG.mahlzeiten.map(m => m.name);
+  const gruppe = z => namen.indexOf(z.gr) >= 0 ? z.gr : "Ohne Mahlzeit";
+  const summe = (zs, f) => zs.some(z => zahl(z[f]) === null) ? null
+    : Math.round(zs.reduce((s, z) => s + zahl(z[f]), 0) * 10) / 10;
+  return namen.concat(["Ohne Mahlzeit"]).map(name => {
+    const zs = zeilen.filter(z => gruppe(z) === name);
+    return {name, zeilen:zs.map(z => ({t:z.t || "", kcal:zahl(z.kcal), protein:zahl(z.protein)})),
+            kcal:summe(zs, "kcal"), protein:summe(zs, "protein")};
+  }).filter(g => g.zeilen.length);
+}
+
 
 /* ============================================================================
    Schicht 4 — die Diagramme
@@ -4196,7 +4266,7 @@ function stateVorgabe(){
   };
 }
 
-const VERSION = "1.18.0";
+const VERSION = "1.19.0";
 
 let STATE = stateVorgabe();
 /* Naehrwerte: am PC aus naehrwerte.js neben der Datei, in der App ueber die Webadresse vom Server
@@ -6325,6 +6395,9 @@ function menueOeffnen(){
       : eintrag("speichern", "⇪", "Speichern", "in den Ordner Daten")
         + eintrag("ordner", "⌂", "Ordner …", "Ordner Daten verbinden"))
     + eintrag("cortana", "⇄", "Aus Cortana", "Tage aus Cortana übernehmen")
+    + eintrag("bildTag", "▣", "Tag als Bild", "Ringe, Summe, Essen und Training des Tages teilen")
+    + eintrag("bildAnsicht", "⧉", "Ansicht als Bild", "die ganze Seite „" + ({tag:"Tag", training:"Training", verlauf:"Verlauf",
+        einst:"Einstellungen"}[document.body.dataset.tab] || "Ansicht") + "“ teilen, auch was unter dem Bildschirm liegt")
     + eintrag("neu", "＋", "Neues Protokoll", "Person und Ziele bleiben")
     + eintrag("thema", "◐", "Hell / dunkel", "wechselt zwischen hell, dunkel und System");
   $("menueListe").querySelectorAll(".eintrag").forEach(b => b.onclick = async () => {
@@ -6337,6 +6410,8 @@ function menueOeffnen(){
     else if (a === "ordner") ordnerWaehlen();
     else if (a === "cortana") corKnopfKlick();
     else if (a === "thema") $("btnTheme").click();
+    else if (a === "bildTag") bildTeilen("tag");
+    else if (a === "bildAnsicht") bildTeilen("ansicht");
     else if (a === "neu"){
       if (GERAET && STATE.tage.length){
         const ok = await frage("Neues Protokoll",
@@ -6352,6 +6427,229 @@ function menueOeffnen(){
   });
   $("menueZu").onclick = () => dlg.close();
   dlg.showModal();
+}
+
+/* --- Bild teilen (1.19.0) ---
+   Ein Browser darf den Bildschirm nicht abfotografieren. Darum zeichnet die App die Ansicht selbst nach: jedes
+   sichtbare Element wird mit seinen berechneten Stilen kopiert (so stimmen Farben, Thema und Handy-Anordnung),
+   als SVG mit foreignObject in ein Bild gelegt und auf ein Canvas gezeichnet. Keine Bibliothek (Regel 5).
+   Nicht ganz pixelgleich: Bildlaufleisten, Cursor und offene Auswahllisten fehlen. */
+const BILD_STILE = ["display", "position", "box-sizing", "width", "height", "min-width", "min-height", "max-width",
+  "max-height", "margin-top", "margin-right", "margin-bottom", "margin-left", "padding-top", "padding-right",
+  "padding-bottom", "padding-left", "border-top-width", "border-right-width", "border-bottom-width",
+  "border-left-width", "border-top-style", "border-right-style", "border-bottom-style", "border-left-style",
+  "border-top-color", "border-right-color", "border-bottom-color", "border-left-color", "border-top-left-radius",
+  "border-top-right-radius", "border-bottom-right-radius", "border-bottom-left-radius", "background-color",
+  "background-image", "background-size", "background-position", "background-repeat", "color", "font-family",
+  "font-size", "font-weight", "font-style", "font-variant-numeric", "line-height", "letter-spacing", "text-align",
+  "text-transform", "text-decoration-line", "text-overflow", "white-space", "word-break", "overflow-wrap",
+  "vertical-align", "flex-direction", "flex-wrap", "flex-grow", "flex-shrink", "flex-basis", "align-items",
+  "align-self", "align-content", "justify-content", "justify-items", "row-gap", "column-gap", "order",
+  "grid-template-columns", "grid-template-rows", "grid-column-start", "grid-column-end", "grid-row-start",
+  "grid-row-end", "grid-auto-flow", "grid-auto-columns", "grid-auto-rows", "overflow-x", "overflow-y", "opacity",
+  "box-shadow", "visibility", "top", "right", "bottom", "left", "z-index", "transform", "transform-origin",
+  "table-layout", "border-collapse", "border-spacing", "list-style-type", "object-fit", "outline-style",
+  "fill", "fill-opacity", "stroke", "stroke-width", "stroke-opacity", "stroke-dasharray", "stroke-dashoffset",
+  "stroke-linecap", "stroke-linejoin", "text-anchor", "dominant-baseline", "clip-path", "mask-image", "filter",
+  "appearance", "float", "clear", "content"];
+const bildStandard = {};      // berechnete Stile eines leeren Elements je Tag: nur Abweichungen werden kopiert
+let bildRahmen = null;
+function bildStandardVon(el){
+  const k = (el.namespaceURI || "") + " " + el.localName;
+  if (bildStandard[k]) return bildStandard[k];
+  if (!bildRahmen){
+    bildRahmen = document.createElement("iframe");
+    bildRahmen.setAttribute("aria-hidden", "true");
+    bildRahmen.style.cssText = "position:absolute;left:-10000px;top:0;width:10px;height:10px;border:0;visibility:hidden";
+    document.body.appendChild(bildRahmen);
+    // ohne Doctype liefe der Rahmen im Quirks-Modus: dort sind Eingabefelder border-box und Tabellen erben keine
+    // Schrift — das Bild (XML, Standardmodus) zeichnete Felder dann zu gross (im Browsertest gefunden)
+    const d = bildRahmen.contentDocument;
+    d.open(); d.write("<!doctype html><html><head></head><body></body></html>"); d.close();
+  }
+  const doc = bildRahmen.contentDocument;
+  const x = doc.createElementNS(el.namespaceURI || "http://www.w3.org/1999/xhtml", el.localName);
+  (doc.body || doc.documentElement).appendChild(x);
+  const cs = getComputedStyle(x), m = {};
+  for (const p of BILD_STILE) m[p] = cs.getPropertyValue(p);
+  x.remove();
+  return (bildStandard[k] = m);
+}
+// Vererbte Eigenschaften: im Bild erbt die Kopie vom Elternteil der Kopie. Gleich dem Standard heisst darum nicht
+// „weglassen“ — sonst erbte eine Zelle mit 16 px die 13 px ihrer Zeile (im Browsertest gefunden)
+const BILD_VERERBT = new Set(["color", "font-family", "font-size", "font-weight", "font-style", "font-variant-numeric",
+  "line-height", "letter-spacing", "text-align", "text-transform", "white-space", "word-break", "overflow-wrap",
+  "visibility", "list-style-type", "border-collapse", "border-spacing", "fill", "fill-opacity", "stroke",
+  "stroke-width", "stroke-opacity", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin",
+  "text-anchor", "dominant-baseline"]);
+function bildStilText(cs, standard, wurzel, eltern){
+  let s = "";
+  for (const p of BILD_STILE){
+    if (p === "content") continue;
+    let v = cs.getPropertyValue(p);
+    // Klebende und feste Teile (Kopfleiste, Tabs unten, Tagessumme) liegen im Bild an ihrem Platz im Fluss
+    if (p === "position" && (v === "sticky" || (wurzel && v !== "static"))) v = "static";
+    const gleich = v === standard[p] && (!BILD_VERERBT.has(p) || (!wurzel && eltern && eltern.getPropertyValue(p) === v));
+    if (!gleich || p === "display") s += p + ":" + v + ";";
+  }
+  return s;
+}
+function bildPseudo(o, wo, eltern){
+  const cs = getComputedStyle(o, wo);
+  const c = cs.getPropertyValue("content");
+  if (!c || c === "none" || c === "normal") return null;
+  const span = document.createElement("span");
+  span.setAttribute("style", bildStilText(cs, bildStandardVon(span), false, eltern));
+  span.textContent = c.charAt(0) === '"' || c.charAt(0) === "'" ? c.slice(1, -1) : "";
+  return span;
+}
+/** Kopie eines Elements mit eingesetzten Stilen; null fuer Unsichtbares. */
+function bildKopie(o, wurzel){
+  if (o.nodeType === 3) return document.createTextNode(o.nodeValue);
+  if (o.nodeType !== 1) return null;
+  const tag = o.localName;
+  if (tag === "script" || tag === "style" || tag === "dialog" || tag === "iframe" || tag === "template") return null;
+  const cs = getComputedStyle(o);
+  if (cs.display === "none") return null;
+  // fest am Bildschirm (Tabs unten, Tagessumme, Meldungen): im Bild an keinem sinnvollen Platz
+  if (!wurzel && cs.position === "fixed") return null;
+  const standard = bildStandardVon(o);
+  const eltern = o.parentElement ? getComputedStyle(o.parentElement) : null;
+  if (tag === "canvas"){
+    const img = document.createElement("img");
+    try { img.src = o.toDataURL(); } catch(e){ return null; }
+    img.setAttribute("style", bildStilText(cs, standard, wurzel, eltern));
+    return img;
+  }
+  const k = o.cloneNode(false);
+  k.removeAttribute("id");
+  k.setAttribute("style", bildStilText(cs, standard, wurzel, eltern));
+  if (tag === "input"){
+    if (o.type === "checkbox" || o.type === "radio"){ if (o.checked) k.setAttribute("checked", ""); else k.removeAttribute("checked"); }
+    else k.setAttribute("value", o.value);
+  }
+  if (tag === "textarea"){ k.textContent = o.value; return k; }
+  if (tag === "select"){
+    // nur die gewaehlte Option: mehr zeigt eine geschlossene Liste ohnehin nicht
+    const opt = o.selectedIndex >= 0 ? o.options[o.selectedIndex] : null;
+    if (opt){ const x = document.createElement("option"); x.textContent = opt.text; x.setAttribute("selected", ""); k.appendChild(x); }
+    return k;
+  }
+  const vor = bildPseudo(o, "::before", cs);
+  if (vor) k.appendChild(vor);
+  for (const c of o.childNodes){ const x = bildKopie(c, false); if (x) k.appendChild(x); }
+  const nach = bildPseudo(o, "::after", cs);
+  if (nach) k.appendChild(nach);
+  return k;
+}
+/** Ein Element als PNG (Blob), so breit wie es ist und so hoch wie sein ganzer Inhalt. */
+async function bildVonElement(el){
+  const r = el.getBoundingClientRect();
+  const breite = Math.ceil(r.width), hoehe = Math.ceil(Math.max(r.height, el.scrollHeight));
+  const m = bildMassstab(breite, hoehe, window.devicePixelRatio);
+  if (!m) throw new Error("nichts zu zeichnen");
+  const kopie = bildKopie(el, true);
+  kopie.style.margin = "0";
+  kopie.style.width = breite + "px";
+  const html = new XMLSerializer().serializeToString(kopie);
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + breite + '" height="' + hoehe + '">'
+    + '<foreignObject x="0" y="0" width="100%" height="100%">' + html + '</foreignObject></svg>';
+  const bild = new Image();
+  await new Promise((ok, fehler) => {
+    bild.onload = ok; bild.onerror = () => fehler(new Error("Bild nicht lesbar"));
+    bild.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  });
+  const cv = document.createElement("canvas");
+  cv.width = Math.round(breite * m); cv.height = Math.round(hoehe * m);
+  const ctx = cv.getContext("2d");
+  ctx.fillStyle = getComputedStyle(document.body).backgroundColor || "#ffffff";
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.scale(m, m);
+  ctx.drawImage(bild, 0, 0, breite, hoehe);
+  const blob = await new Promise(ok => cv.toBlob(ok, "image/png"));
+  if (!blob) throw new Error("zu gross für dieses Gerät");
+  return {blob, breite:cv.width, hoehe:cv.height};
+}
+
+/** Die Tageskarte: Ringe, Summen, Essen nach Mahlzeit, Training, Getränke — für den gewählten Tag. */
+function bildTagKarte(){
+  const d = gewaehlterTag || heute();
+  const e = tagEintrag();
+  const zeit = d === heute() ? new Date() : (() => { const x = alsDatum(d); x.setHours(12); return x; })();
+  const ts = tagesstand(STATE, zeit, lmVon);
+  const zahl0 = v => v === null ? "—" : fmt(v, 0);
+  const essen = tagBildEssen(e).map(g => '<tr class="gr"><td>' + esc(g.name) + '</td><td class="z">'
+      + (g.kcal === null ? "—" : fmt(g.kcal, 0) + " kcal") + '</td><td class="z">'
+      + (g.protein === null ? "—" : fmt(g.protein, 0) + " g") + '</td></tr>'
+    + g.zeilen.map(z => '<tr><td>' + esc(z.t) + '</td><td class="z">' + zahl0(z.kcal) + '</td><td class="z">'
+      + (z.protein === null ? "—" : fmt(z.protein, 1)) + '</td></tr>').join("")).join("");
+  const rub = rubrikTexte(e, STATE.aktArten);
+  const wer = (serverZiel && serverZiel.person) || STATE.meta.name || "";
+  const div = document.createElement("div");
+  div.className = "bildkarte";
+  div.innerHTML = '<div class="bk-kopf"><b>Körper-Protokoll</b><span>'
+      + alsDatum(d).toLocaleDateString("de-CH", {weekday:"long", day:"2-digit", month:"2-digit", year:"numeric"})
+      + (wer ? "<br>" + esc(wer) : "") + '</span></div>'
+    + '<div class="stats" style="padding:0">' + $("tagSummen").innerHTML + '</div>'
+    + '<div class="bk-block"><div class="bk-titel">Tagesringe</div>' + tagKreisHtml(tagesRinge(ts), ts) + '</div>'
+    + '<div class="bk-block"><div class="bk-titel">Fasten</div>'
+      + fastenKreisHtml(fastenStand(STATE.tage, d, new Date()), e)
+      + '<p class="explain" style="margin:8px 0 0">Die Phasen sind eine grobe Orientierung, keine Messung.</p></div>'
+    + (essen ? '<div class="bk-block"><div class="bk-titel">Essen</div><table>' + essen + '</table></div>' : "")
+    + '<div class="bk-block"><div class="bk-titel">Training und Getränke</div>'
+      + '<div class="bk-zeile"><span>Aktivität</span><span>' + esc(rub.akt) + '</span></div>'
+      + '<div class="bk-zeile"><span>Alkohol</span><span>' + esc(rub.alk) + '</span></div>'
+      + '<div class="bk-zeile"><span>Koffein</span><span>' + esc(rub.koff) + '</span></div></div>'
+    + '<div class="bk-fuss">Version ' + VERSION + ' · Stand ' + new Date().toLocaleTimeString("de-CH", {hour:"2-digit", minute:"2-digit"})
+      + '</div>';
+  return div;
+}
+
+let bildAktuell = null;
+async function bildTeilen(was){
+  const dlg = $("dlgBild");
+  const tab = document.body.dataset.tab || (document.body.dataset.bereich === "training" ? "training" : "tag");
+  const name = bildDateiname(was === "tag" ? "tag" : tab === "einst" ? "einstellungen" : tab, gewaehlterTag || heute());
+  $("bildTitel").textContent = was === "tag" ? "Tag als Bild" : "Ansicht als Bild";
+  $("bildVorschau").innerHTML = "<p>Bild wird gezeichnet …</p>";
+  $("bildText").textContent = "";
+  $("bildTeilen").disabled = $("bildSpeichern").disabled = true;
+  bildAktuell = null;
+  $("bildZu").onclick = () => dlg.close();
+  if (!dlg.open) dlg.showModal();
+  await new Promise(ok => setTimeout(ok, 30));       // „wird gezeichnet“ zuerst zeigen
+  let buehne = null;
+  try {
+    let el = document.querySelector(".app");
+    if (was === "tag"){
+      buehne = document.createElement("div");
+      buehne.className = "bildbuehne";
+      buehne.appendChild(bildTagKarte());
+      document.body.appendChild(buehne);
+      el = buehne.firstChild;
+    }
+    const b = await bildVonElement(el);
+    bildAktuell = {blob:b.blob, name};
+    const url = URL.createObjectURL(b.blob);
+    $("bildVorschau").innerHTML = '<img alt="Vorschau" src="' + url + '">';
+    $("bildText").textContent = name + " · " + b.breite + " × " + b.hoehe + " Bildpunkte · " + fmt(b.blob.size / 1024, 0) + " kB";
+    $("bildSpeichern").disabled = false;
+    const datei = typeof File === "function" ? new File([b.blob], name, {type:"image/png"}) : null;
+    const teilbar = !!(datei && navigator.canShare && navigator.canShare({files:[datei]}));
+    $("bildTeilen").disabled = !teilbar;
+    $("bildTeilen").title = teilbar ? "" : "Dieser Browser kann Bilder nicht teilen — Speichern legt es unter „Downloads“ ab";
+    // Teilen braucht einen eigenen Tipp: das Zeichnen dauert länger, als der Browser den Menü-Tipp gelten lässt
+    $("bildTeilen").onclick = async () => {
+      try { await navigator.share({files:[datei], title:name}); dlg.close(); }
+      catch(err){ if (!err || err.name !== "AbortError") $("bildText").textContent = "Teilen ging nicht: " + (err && err.message || err); }
+    };
+    $("bildSpeichern").onclick = () => { sichern(b.blob, name); $("bildText").textContent = name + " liegt unter „Downloads“."; };
+  } catch(err){
+    $("bildVorschau").innerHTML = "<p>Das Bild liess sich nicht zeichnen.</p>";
+    $("bildText").textContent = String(err && err.message || err);
+  } finally {
+    if (buehne) buehne.remove();
+  }
 }
 
 /* --- Tabs am Handy: Tag, Verlauf, Einstellungen --- */
