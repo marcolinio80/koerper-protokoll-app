@@ -4065,6 +4065,15 @@ function bildDateiname(was, datum){
   return "Koerper-" + w.charAt(0).toUpperCase() + w.slice(1) + "-" + datum + ".png";
 }
 
+/** Meldung, wenn eine gewaehlte Datei keine JSON ist. Android bietet beim Laden auch die Kamera an — ein Foto ist
+    dann kein Fehler der Datei, sondern der falsche Weg (Madlena, 29.10.2026). */
+function dateiNichtLesbar(name, typ){
+  const bild = /^image\//.test(typ || "") || /\.(jpe?g|png|gif|webp|heic|heif)$/i.test(name || "");
+  return bild
+    ? name + " ist ein Foto, kein Protokoll — hier wird nur eine .json geladen. Ein Bild vom Tag machst du mit ☰ → „Tag als Bild“."
+    : name + " ist keine lesbare JSON-Datei.";
+}
+
 /** Essen des Tages fuer das Bild: je Mahlzeit in der Reihenfolge von CONFIG.mahlzeiten, Zeilen ohne Mahlzeit am
     Schluss. Fehlt bei einer Zeile der Wert, bleibt die Summe der Mahlzeit offen (null) — keine 0 (Regel 2). */
 function tagBildEssen(e){
@@ -4266,7 +4275,7 @@ function stateVorgabe(){
   };
 }
 
-const VERSION = "1.19.0";
+const VERSION = "1.19.1";
 
 let STATE = stateVorgabe();
 /* Naehrwerte: am PC aus naehrwerte.js neben der Datei, in der App ueber die Webadresse vom Server
@@ -5954,7 +5963,7 @@ function corDateiGewaehlt(f){
   r.onload = () => {
     let daten = null;
     try { daten = JSON.parse(r.result); }
-    catch(e){ melden("Nicht gelesen", f.name + " ist keine lesbare JSON-Datei."); return; }
+    catch(e){ melden("Nicht gelesen", dateiNichtLesbar(f.name, f.type)); return; }
     corOeffnen(daten, f.name);
   };
   r.readAsText(f);
@@ -6054,7 +6063,7 @@ function ladenDatei(f){
   r.onload = async () => {
     let daten = null;
     try { daten = JSON.parse(r.result); }
-    catch(e){ melden("Nicht gelesen", f.name + " ist keine lesbare JSON-Datei."); return; }
+    catch(e){ melden("Nicht gelesen", dateiNichtLesbar(f.name, f.type)); return; }
     if (istCortanaDatei(daten)){ corOeffnen(daten, f.name); return; }
     if (!daten || typeof daten !== "object" || !Array.isArray(daten.tage)){
       melden("Nicht geladen", f.name + " ist kein Protokoll."); return;
@@ -6389,15 +6398,15 @@ function menueOeffnen(){
   $("menueListe").innerHTML = (GERAET && serverZiel
       ? eintrag("abgleich", "⟳", "Jetzt abgleichen", "mit dem Server, als " + esc(serverZiel.person || "?"))
       : "")
+    + eintrag("bildTag", "▣", "Tag als Bild", "Ringe, Summe, Essen und Training des Tages teilen")
+    + eintrag("bildAnsicht", "⧉", "Ansicht als Bild", "die ganze Seite „" + ({tag:"Tag", training:"Training", verlauf:"Verlauf",
+        einst:"Einstellungen"}[document.body.dataset.tab] || "Ansicht") + "“ teilen, auch was unter dem Bildschirm liegt")
     + (GERAET
       ? eintrag("export", "⇪", "Exportieren", "Teilen nach Dropbox, Ordner Daten")
         + eintrag("laden", "⇩", "Aus Datei laden", "z. B. den Stand vom PC")
       : eintrag("speichern", "⇪", "Speichern", "in den Ordner Daten")
         + eintrag("ordner", "⌂", "Ordner …", "Ordner Daten verbinden"))
     + eintrag("cortana", "⇄", "Aus Cortana", "Tage aus Cortana übernehmen")
-    + eintrag("bildTag", "▣", "Tag als Bild", "Ringe, Summe, Essen und Training des Tages teilen")
-    + eintrag("bildAnsicht", "⧉", "Ansicht als Bild", "die ganze Seite „" + ({tag:"Tag", training:"Training", verlauf:"Verlauf",
-        einst:"Einstellungen"}[document.body.dataset.tab] || "Ansicht") + "“ teilen, auch was unter dem Bildschirm liegt")
     + eintrag("neu", "＋", "Neues Protokoll", "Person und Ziele bleiben")
     + eintrag("thema", "◐", "Hell / dunkel", "wechselt zwischen hell, dunkel und System");
   $("menueListe").querySelectorAll(".eintrag").forEach(b => b.onclick = async () => {
