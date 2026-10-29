@@ -7,7 +7,7 @@
    Die Naehrwertdatei gehoert seit 1.11.0 nicht mehr dazu: die Naehrwerte kommen mit dem Token
    vom Server und liegen in der IndexedDB der Seite (das App-Repo ist oeffentlich). */
 "use strict";
-const STAND = "1.15.0-4ec8e88d1227";
+const STAND = "1.17.0-c939d110326e";
 const CACHE = "koerper-protokoll-" + STAND;
 const DATEIEN = ["./", "index.html", "manifest.webmanifest", "app-192.png", "app-512.png"];
 

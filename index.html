@@ -157,6 +157,18 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .field{display:flex;flex-direction:column;gap:4px}
 .field > label{font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+/* Rubriken Alkohol, Koffein, Aktivitäten (1.16.1): am PC sieht der Kopf aus wie die Beschriftung, am Handy eine Karte */
+details.rub > summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:10px;padding:2px 0 6px}
+details.rub > summary::-webkit-details-marker{display:none}
+details.rub > summary .rk{font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+details.rub > summary .rk::before{content:"▸";display:inline-block;width:1em;transition:transform .15s}
+details.rub[open] > summary .rk::before{transform:rotate(90deg)}
+details.rub > summary .rs{font-size:12.5px;color:var(--ink-2);margin-left:auto;text-align:right}
+@media (max-width:700px){
+  details.rub{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 12px}
+  details.rub > summary{padding:13px 0}
+  details.rub[open]{padding-bottom:12px}
+}
 .field input, .field select{background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:6px 9px;width:100%}
 .field input:focus, .field select:focus{background:var(--surface)}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -406,7 +418,9 @@ dialog > h2{margin:0;padding:12px 16px;font-size:11px;font-weight:700;letter-spa
   padding:9px 12px;font-size:14.5px}
 .lmsuche input:focus{background:var(--surface);border-color:var(--focus)}
 .lmsuche input:disabled{opacity:.55}
-.lmvorschlag{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:8;background:var(--surface);
+/* Im Fluss statt darüber (27.10.2026): die Liste schob sich über Quellen, „Zuletzt“ und Knöpfe und fing deren
+   Klicks ab — jetzt schiebt sie sie nach unten. */
+.lmvorschlag{position:static;margin-top:4px;background:var(--surface);
   border:1px solid var(--line-2);border-radius:8px;box-shadow:var(--shadow);max-height:360px;overflow-y:auto}
 .lmvorschlag .kopf{padding:7px 12px;font-size:11.5px;color:var(--ink-3);border-bottom:1px solid var(--line);
   display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
@@ -508,6 +522,14 @@ body:not([data-bereich="training"]) #trainingSeite{display:none}
 .trueb .kette b{color:var(--accent)}
 .trueb .mx{grid-column:1/-1;font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
 .trueb .mx.warn{color:var(--warn-ink)}
+.trueb .mx.ok{color:var(--ok)}
+.werf{display:flex;flex-wrap:wrap;gap:10px 16px;justify-content:center;align-items:center;margin-top:10px}
+.werf .l{width:100%;font-size:13px;color:var(--ink-3)}
+.werf .z{display:inline-flex;align-items:center;gap:6px}
+.werf .z .btn{min-width:44px;min-height:44px;font-size:20px;justify-content:center}
+.werf input{width:3.4em;font-size:26px;font-weight:650;text-align:center;background:transparent;color:var(--ink);border:0;
+  border-bottom:3px solid var(--accent);-moz-appearance:textfield;font-variant-numeric:tabular-nums}
+.werf input::-webkit-outer-spin-button,.werf input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 #trHeute .note{margin:0}
 .trss{font-size:11px;font-weight:650;color:var(--accent);margin:6px 0 -2px}
 .anl{font-size:13px;color:var(--ink-2);line-height:1.5;margin-top:6px;text-align:left}
@@ -1026,30 +1048,32 @@ body.geraet #serverPanel{display:block}
         den Tag geschrieben</b>: ändert sich später die Nährwertdatei, bleiben vergangene Tage,
         wie sie waren. <span id="lmStand"></span></p>
 
+      <!-- Alkohol, Koffein, Aktivitäten: aufklappbar, am Handy zugeklappt, der Kopf sagt, was drin ist (1.16.1,
+           wie im Entwurf-Handy). Am PC offen wie bisher. -->
       <div class="sep"></div>
-      <div class="field">
-        <label>Alkohol</label>
-        <table class="mahl" id="alkTab"></table>
-      </div>
-      <div class="actions">
-        <button class="btn mini" id="alkPlus">+ Getränk</button>
-      </div>
-      <p class="explain">Menge in cl oder dl eintragen — Standardgläser und Kalorien rechnet
-        die Anwendung aus Volumenprozent und Restsüsse. Ein <b>Standardglas</b> sind 10 g
-        reiner Alkohol; erst damit sind Bier, Wein und Schnaps vergleichbar. Die Kalorien
-        zählen beim Tagestotal mit.</p>
+      <details class="rub" id="rubAlk" open>
+        <summary><span class="rk">Alkohol</span><span class="rs" id="rubAlkS"></span></summary>
+        <div class="field"><table class="mahl" id="alkTab"></table></div>
+        <div class="actions">
+          <button class="btn mini" id="alkPlus">+ Getränk</button>
+        </div>
+        <p class="explain">Menge in cl oder dl eintragen — Standardgläser und Kalorien rechnet
+          die Anwendung aus Volumenprozent und Restsüsse. Ein <b>Standardglas</b> sind 10 g
+          reiner Alkohol; erst damit sind Bier, Wein und Schnaps vergleichbar. Die Kalorien
+          zählen beim Tagestotal mit.</p>
+      </details>
 
       <div class="sep"></div>
-      <div class="field">
-        <label>Koffein</label>
-        <table class="mahl" id="koffTab"></table>
-      </div>
-      <div class="actions">
-        <button class="btn mini" id="koffPlus">+ Kaffee</button>
-      </div>
-      <p class="explain">Anzahl Tassen eintragen, Koffein und Kalorien folgen daraus. Die Milch
-        macht dabei den Unterschied: Espresso und Latte macchiato haben ähnlich viel Koffein,
-        aber 2 gegen 120 kcal.</p>
+      <details class="rub" id="rubKoff" open>
+        <summary><span class="rk">Koffein</span><span class="rs" id="rubKoffS"></span></summary>
+        <div class="field"><table class="mahl" id="koffTab"></table></div>
+        <div class="actions">
+          <button class="btn mini" id="koffPlus">+ Kaffee</button>
+        </div>
+        <p class="explain">Anzahl Tassen eintragen, Koffein und Kalorien folgen daraus. Die Milch
+          macht dabei den Unterschied: Espresso und Latte macchiato haben ähnlich viel Koffein,
+          aber 2 gegen 120 kcal.</p>
+      </details>
       <datalist id="mahlNamen">
         <option value="Frühstück"></option><option value="Znüni"></option>
         <option value="Mittagessen"></option><option value="Zvieri"></option>
@@ -1059,10 +1083,11 @@ body.geraet #serverPanel{display:block}
       </datalist>
 
       <div class="sep"></div>
-      <div class="field"><label>Aktivitäten</label>
-        <div id="aktListe" style="display:flex;flex-direction:column;gap:6px"></div>
-      </div>
-      <div class="actions"><button class="btn mini" id="aktPlus">+ Aktivität</button></div>
+      <details class="rub" id="rubAkt" open>
+        <summary><span class="rk">Aktivitäten</span><span class="rs" id="rubAktS"></span></summary>
+        <div class="field"><div id="aktListe" style="display:flex;flex-direction:column;gap:6px"></div></div>
+        <div class="actions"><button class="btn mini" id="aktPlus">+ Aktivität</button></div>
+      </details>
 
       <div class="sep"></div>
       <div class="stats" id="tagSummen" style="padding:0"></div>
@@ -1944,6 +1969,7 @@ const CONFIG = {
   trainingSchaetzBis: 2,      // weiter weg in der Kette wird nicht geschätzt (Y-T-W aus Klimmzügen wäre geraten)
   trainingAnteilZeit: 0.5,    // „Runden auf Zeit“: die Hälfte des Maximums je Runde
   trainingMindest: {wdh:3, sek:10},   // weniger geht nicht sinnvoll — dann die leichtere Übung
+  trainingKgSchritt: 2.5,     // alle Sätze geschafft: so viel mehr Gewicht beim nächsten Mal (1.16.0)
   // Formen (Anregung Freeletics, eigene Umsetzung); Doppel-Up nach Marco
   trainingModi: [["saetze","Sätze & Pausen"],["intervall","Intervalle 40/20"],["zeit","Runden auf Zeit"],["doppel","Doppel-Up"]],
   trainingDauern: [15, 20, 30, 45, 60],
@@ -2077,6 +2103,60 @@ const CONFIG = {
     {muster:/^honig/i,                 e:"TL",      m:7},
     {muster:/^zucker/i,                e:"TL",      m:5},
     {muster:/^konfitüre/i,             e:"TL",      m:10},
+  ],
+
+  /* Fertige Portionen (1.17.0). Marco, 29.10.2026: „ich möchte das du fertige portionen mit
+     aufnimmst. zbsp gemüse suppe, dönner kebab“ — auf Rueckfrage BLV-Werte je 100 g und ein
+     Faustwert fuers Portionsgewicht, „ein döner hat eher 500gr pro portion“. Gilt nur fuer die
+     BLV (Produkte haben ihre Packung) und geht vor CONFIG.stueck: ein Gericht ist keine
+     Brotscheibe („Kebab im Fladenbrot“ traf sonst /brot\b/). w = weitere Suchwoerter, mit
+     denen man das Gericht sucht, die aber im BLV-Namen nicht stehen.
+     Wie beim Stueck: Faustwerte, sichtbar in der Zeile und korrigierbar. */
+  portionen: [
+    {muster:/^kebab im fladenbrot/i,             m:500, w:"Döner Dönerkebab"},
+    {muster:/^minestrone/i,                      m:300, w:"Gemüsesuppe"},
+    {muster:/suppe$/i,                           m:300},
+    {muster:/^bouillon/i,                        m:250, w:"Suppe"},
+    {muster:/^pizza .*gebacken/i,                m:350},
+    {muster:/^hamburger, doppelt/i,              m:220},
+    {muster:/^cheeseburger/i,                    m:120},
+    {muster:/^burger mit/i,                      m:200},
+    {muster:/^hot dog/i,                         m:150},
+    {muster:/^schnitzelbrot/i,                   m:250},
+    {muster:/^sandwich \(baguette\)/i,           m:200},
+    {muster:/^sandwich \(ruchbrot\)/i,           m:150},
+    {muster:/^croque monsieur/i,                 m:150},
+    {muster:/lasagne, zubereitet/i,              m:350, w:"Lasagna"},
+    {muster:/^cannelloni/i,                      m:350},
+    {muster:/^teigwarenauflauf/i,                m:350},
+    {muster:/^älplermagronen/i,                  m:400},
+    {muster:/^capuns/i,                          m:300},
+    {muster:/^chili con carne/i,                 m:350},
+    {muster:/^(bami|nasi) goreng/i,              m:400},
+    {muster:/^riz casimir/i,                     m:400},
+    {muster:/risotto, zubereitet/i,              m:350, w:"Risotto"},
+    {muster:/ragout mit sauce/i,                 m:200, w:"Voressen Ragout"},
+    {muster:/^hackbraten/i,                      m:150},
+    {muster:/piccata, zubereitet/i,              m:150},
+    {muster:/^ratatouille/i,                     m:250},
+    {muster:/^kartoffelgratin/i,                 m:250},
+    {muster:/^gemüsegratin/i,                    m:300},
+    {muster:/^fondue .*zubereitet/i,             m:250},
+    {muster:/^flammenkuchen, gebacken/i,         m:300},
+    {muster:/^quiche lorraine/i,                 m:150},
+    {muster:/kuchen.*gebacken|^fruchtwähe/i,     m:150, w:"Wähe"},
+    {muster:/^crêpes .*zubereitet/i,             m:150},
+    {muster:/^eieromeletten/i,                   m:150, w:"Omelette"},
+    {muster:/^rührei.*zubereitet/i,              m:150},
+    {muster:/^pommes frites|^ofen-frites/i,      m:150, w:"Pommes"},
+    {muster:/^birchermüesli, zubereitet/i,       m:250},
+    {muster:/^coleslaw/i,                        m:100},
+    {muster:/^russischer salat/i,                m:150},
+    {muster:/^teigwarensalat/i,                  m:200, w:"Nudelsalat"},
+    {muster:/^taboulé/i,                         m:200},
+    {muster:/^wurstsalat/i,                      m:250},
+    {muster:/^crevettencocktail/i,               m:150},
+    {muster:/^vitello tonnato/i,                 m:150},
   ],
 
   /* Mahlzeiten des Tages, mit der Uhrzeit, ab der sie vorgeschlagen werden.
@@ -2524,6 +2604,26 @@ function tagAlk(e){
   const v = getrSumme(e, "glas");
   return v === null ? null : Math.round(v * 10) / 10;
 }
+/** Kopf der aufklappbaren Rubriken am Handy (1.16.1, wie im Entwurf): was drin ist, „keiner“, wenn nichts. */
+function rubrikTexte(e, arten){
+  const getr = getraenke(e).map(getraenkWerte).filter(Boolean);
+  const koff = koffeinZeilen(e).map(z => ({z, w:koffWerte(z)})).filter(x => x.w);
+  const akt = (e && Array.isArray(e.akt) ? e.akt : []).filter(a => a && a.art);
+  const art = id => (arten || CONFIG.training).find(x => x.id === id);
+  const glas = Math.round(getr.reduce((s, w) => s + w.glas, 0) * 10) / 10;
+  let a = "keine";
+  if (akt.length === 1){
+    const t = art(akt[0].art), d = zahl(akt[0].dist);
+    a = (t ? t.name : akt[0].art) + " · " + (d && t && t.kmh ? d + " " + (t.distEinheit || "km") : aktMinuten(akt[0], arten) + " min");
+  } else if (akt.length > 1){
+    a = akt.map(x => art(x.art) ? art(x.art).name : x.art).join(", ") + " · " + akt.reduce((s, x) => s + aktMinuten(x, arten), 0) + " min";
+  }
+  return {
+    alk: getr.length ? [...new Set(getr.map(w => w.art.name))].join(", ") + " · " + glas + (glas === 1 ? " Glas" : " Gläser") : "keiner",
+    koff: koff.length ? koff.map(x => zahl(x.z.n) + " " + x.w.art.name).join(", ") + " · " + koff.reduce((s, x) => s + x.w.mg, 0) + " mg" : "keiner",
+    akt: a,
+  };
+}
 
 /**
  * Effektive Dauer einer Einheit. Eingetragene Zeit gewinnt; fehlt sie, wird
@@ -2888,30 +2988,40 @@ function eingabeZerlegen(s){
 }
 
 /** Einheiten eines Lebensmittels: Grundeinheit, dann Stueck (von der Packung
-    oder aus CONFIG.stueck), Portion, Packung. m = Menge in der Grundeinheit. */
-function lmEinheiten(l, stueck){
+    oder aus CONFIG.stueck), Portion, Packung. m = Menge in der Grundeinheit.
+    Ein fertiges Gericht der BLV (CONFIG.portionen) hat statt des Stuecks eine Portion. */
+function lmEinheiten(l, stueck, portionen){
   const r = [{e:l.e, m:1}];
+  const gericht = !(zahl(l.port) > 0) && l.q === "BLV" ? lmPortionVon(l, portionen) : null;
   if (zahl(l.stk) > 0) r.push({e:"Stück", m:zahl(l.stk)});
-  else {
+  else if (!gericht){
     const s = (stueck || []).find(x => x.muster.test(l.n));
     if (s) r.push({e:s.e, m:s.m});
   }
   if (zahl(l.port) > 0) r.push({e:"Portion", m:zahl(l.port)});
+  else if (gericht) r.push({e:"Portion", m:gericht.m});
   if (zahl(l.pack) > 0) r.push({e:"Packung", m:zahl(l.pack)});
   return r;
 }
 
 /** Liest die Naehrwertdatei (window.NAEHRWERTE). Fehlt sie, gibt es eine
     leere Liste und einen Merker — die Anwendung laeuft weiter, nur ohne Suche. */
-function naehrwerteLesen(roh, stueck){
+function lmPortionVon(l, portionen){
+  return (portionen || []).find(x => x.muster.test(l.n)) || null;
+}
+
+function naehrwerteLesen(roh, stueck, portionen){
   if (!roh || !Array.isArray(roh.felder) || !Array.isArray(roh.lm))
     return {lm:[], quellen:{}, stand:null, lauf:null, fehlt:true};
   const lm = roh.lm.map(z => {
     const l = {};
     roh.felder.forEach((f, i) => { l[f] = z[i] === undefined ? null : z[i]; });
     l.m = l.m || "";
-    l.einh = lmEinheiten(l, stueck);
-    l.s = normText(l.n + " " + l.m);
+    l.einh = lmEinheiten(l, stueck, portionen);
+    // Suchwoerter des Gerichts („Döner“ findet „Kebab im Fladenbrot“)
+    const gericht = l.q === "BLV" ? lmPortionVon(l, portionen) : null;
+    l.s = normText(l.n + " " + l.m + (gericht && gericht.w ? " " + gericht.w : ""));
+    if (gericht && gericht.w) l.w = normText(gericht.w);
     return l;
   });
   return {lm, quellen:roh.quellen || {}, stand:roh.stand || null, lauf:roh.lauf || null, fehlt:false};
@@ -2986,16 +3096,25 @@ function lmSuchen(liste, text, opt){
     const nameOhne = b.l.q === "Rezept" ? b.l.n.replace(/\s*\([^()]*\)$/, "") : b.l.n;
     const kernName = normText(nameOhne).indexOf(vorsatz) === 0 ? normText(nameOhne).slice(vorsatz.length) : normText(nameOhne);
     let p = b.n * 100;
-    if (kern.indexOf(w[0]) === 0) p += 30;
+    // Das Suchwort eines Gerichts zaehlt wie sein Name: „Döner“ ist „Kebab im Fladenbrot“ (1.17.0)
+    const syn = b.l.w ? " " + b.l.w + " " : "";
+    if (kern.indexOf(w[0]) === 0 || syn.indexOf(" " + w[0]) >= 0) p += 30;
     if (s.indexOf(" " + w[0] + " ") >= 0) p += 35;
     if (s.indexOf(" roh ") >= 0) p += 8;
+    // Was mit „mit …“ dazukommt, ohne dass es gesucht wurde, rückt nach hinten: „Poulet“ ist nicht
+    // „Poulet, ganz, mit Haut“ — das gewann bis 1.16.0 nur, weil der Name kürzer ist (todo, 27.10.2026)
+    const mitStelle = s.indexOf(" mit ");
+    if (mitStelle >= 0 && w.indexOf("mit") < 0){
+      const dazu = s.slice(mitStelle + 5).split(" ")[0];
+      if (dazu && w.indexOf(dazu) < 0) p -= 10;
+    }
     // Ein allgemeines Wort meint ein allgemeines Lebensmittel: „Ei“ ist das
     // Huehnerei, nicht „Ei & Le Gruyere AOP“ (real passiert: 515 statt 77 kcal).
     // Wer ein Produkt will, tippt mehr oder waehlt die Quelle.
     if (b.l.q === "BLV") p += 30;
     // Heisst ein Produkt genau so wie die Eingabe, kommt es nahe heran —
     // bewusst knapp unter das BLV („Apfel“ vor Migros „Aepfel“).
-    if (kernName === ganz) p += 25;
+    if (kernName === ganz || syn.indexOf(" " + ganz + " ") >= 0) p += 25;
     // „1 Apfel“ fragt nach einem Stueck: Eintraege mit Stueckgewicht vor — ein
     // echtes Stueck vor einer Packung, die nur als Stueck gilt („1 Buttergipfel“
     // ist ein Gipfeli zu 45 g, nicht die Migros-Packung zu 240 g; 26.10.2026).
@@ -3004,6 +3123,10 @@ function lmSuchen(liste, text, opt){
     // Ebenso jede andere genannte Einheit: „1 Portion Butter chicken“ will einen Eintrag, der eine
     // Portion kennt, nicht die Migros-Packung mit „Portion passt nicht“ (Marco, 26.10.2026)
     if (opt.einh && lmEinheitStandard(b.l, opt.einh) === null) p -= 80;
+    // Hat ein Eintrag die genannte Einheit wirklich (nicht nur ausgewichen), kommt er vor:
+    // „1 Packung Gemüsesuppe“ ist die Packung, nicht der Teller der BLV (1.17.0)
+    if (opt.einh && !EINHEIT_FEST.g[opt.einh] && !EINHEIT_FEST.ml[opt.einh]
+        && b.l.einh.some(x => x.e === opt.einh)) p += 40;
     if (zuletzt.indexOf(b.l.id) >= 0) p += 40;
     b.p = p - b.l.n.length / 6;
   }
@@ -3481,7 +3604,7 @@ function cortanaUebernehmen(tage, plan, auswahl){
    Alles hier ist rein: der Plan kommt als Argument, nichts liest STATE. Ein absolviertes Training wird
    eine gewöhnliche Aktivität im Tag (trainingEintrag) — die kcal rechnet trainingKcal() wie immer. */
 function trainingPlanVorgabe(){ return {ziel:"fett", modus:"saetze", stufe:"fort", tage:[0, 2, 4], dauer:30, aus:["kg"], supersatz:true}; }
-function trainingVorgabe(){ return {plan:trainingPlanVorgabe(), stufeDelta:{}, coach:0, best:{}, doppel:{}, erledigt:{}, eigene:[], koennen:{}}; }
+function trainingVorgabe(){ return {plan:trainingPlanVorgabe(), stufeDelta:{}, coach:0, best:{}, doppel:{}, erledigt:{}, eigene:[], koennen:{}, verlauf:{}}; }
 
 /** Die Form, die wirklich gilt: Beweglichkeit hat nur eine; Kondition kennt keine Sätze mit langen Pausen. */
 function trainingModus(plan){
@@ -3554,6 +3677,47 @@ function trainingMax(id, g, koennen){
   }
   return best ? {w:Math.round(best.w * Math.pow(CONFIG.trainingSchwerer, best.ab)), gemessen:false, von:best.t} : null;
 }
+/* Sätze festhalten (1.16.0). Marco, 27.10.2026: „ja bau 1 und 2“ — erreichte Wiederholungen je Satz,
+   Gewicht je Satz im Studio. erfasst = {übung: {g, ziel, wdh:[…], kg:[…]}} aus dem Ablauf;
+   training.verlauf = {übung: [{d, ziel, wdh, kg}, …]}, die letzten 20 je Übung. */
+function verlaufEintragen(verlauf, erfasst, d){
+  const r = JSON.parse(JSON.stringify(verlauf || {}));
+  for (const id in erfasst || {}){
+    // Satz für Satz: Wiederholungen und Gewicht bleiben beisammen, auch wenn ein Satz fehlt
+    const e = erfasst[id], kgs = e.kg || [], idx = [];
+    (e.wdh || []).forEach((x, i) => { if (zahl(x) !== null) idx.push(i); });
+    if (!idx.length) continue;
+    const wdh = idx.map(i => Math.round(zahl(e.wdh[i])));
+    const kg = idx.some(i => zahl(kgs[i]) !== null) ? idx.map(i => zahl(kgs[i])) : null;
+    r[id] = (r[id] || []).concat([{d, ziel:e.ziel, wdh, kg}]).slice(-20);
+  }
+  return r;
+}
+/** Mehr Wiederholungen am Stück als das bekannte (gemessene oder geschätzte) Maximum: das ist das neue Maximum.
+    Ohne bekanntes Maximum sagt ein Satz nichts — er war nur das Ziel; mit Gewicht ebenso wenig. */
+function koennenAusSaetzen(koennen, erfasst, d){
+  const r = JSON.parse(JSON.stringify(koennen || {}));
+  for (const id in erfasst || {}){
+    if (!CONFIG.uebungen[id] || trainingMitGewicht(id)) continue;
+    const best = Math.max(...(erfasst[id].wdh || []).map(x => zahl(x) || 0), 0);
+    const m = trainingMax(id, erfasst[id].g, r);
+    if (m && best > m.w) r[id] = {w:best, d};
+  }
+  return r;
+}
+/** Steigern nach dem letzten Mal: alle Sätze geschafft → 1 Wdh mehr, bei Gewicht 2,5 kg mehr bei gleichen Wdh. */
+function trainingFortschritt(eintraege, u){
+  const last = eintraege && eintraege.length ? eintraege[eintraege.length - 1] : null;
+  if (!last) return {wert:u.wert, kg:null, zuletzt:null, plus:false};
+  const alle = last.wdh.length > 0 && last.wdh.every(x => x >= last.ziel);
+  if (trainingMitGewicht(u.id)){
+    const kgs = (last.kg || []).filter(x => x !== null);
+    const kg = kgs.length ? kgs[kgs.length - 1] : null;
+    return {wert:u.wert, kg:kg === null ? null : alle ? kg + CONFIG.trainingKgSchritt : kg, zuletzt:last, plus:alle && kg !== null};
+  }
+  return {wert:alle ? Math.max(u.wert, last.ziel + 1) : u.wert, kg:null, zuletzt:last, plus:alle};
+}
+
 /** Video zur Übung (1.15.0): ein Link zur YouTube-Suche, keine fremden Inhalte in der App — sie bleibt offline,
     und ein Suchlink veraltet nicht wie ein fester Link auf ein einzelnes Video. */
 function trainingVideoUrl(id){
@@ -3714,6 +3878,12 @@ function trainingTag(plan, vorlage, extra){
   let nr = 0;
   bl.forEach(b => { if (b.length === 2){ nr++; b.forEach(u => { u.ss = nr; }); } });
   const liste = [].concat(...bl);
+  // 4. Fortschritt aus dem Verlauf (1.16.0): alle Sätze geschafft → mehr. Nur bei Sätzen mit Wiederholungen.
+  if (modus === "saetze") liste.forEach(u => {
+    if (u.art !== "wdh") return;
+    const f = trainingFortschritt((extra.verlauf || {})[u.id], u);
+    Object.assign(u, {wert:f.wert, kg:f.kg, zuletzt:f.zuletzt, plus:f.plus});
+  });
   // Finisher beim Fettziel: ein kurzer Zirkel am Schluss
   let finisher = null;
   if (mitFinisher){
@@ -3736,6 +3906,7 @@ function trainingZuKurz(tr, dauer){ return tr.dauer < (zahl(dauer) || 0) - 4; }
 function trainingSchritte(tr){
   const s = [{typ:"warm", n:"Aufwärmen", sek:tr.auf, text:"Gelenke kreisen, 1 min Hampelmann, 10 Kniebeugen, 10 Armkreisen."}];
   const satz = (u, i, von, runde) => ({typ:"satz", id:u.id, n:u.n, satzNr:i, von, runde, ss:u.ss || null,
+    g:u.g, wert:u.wert, kg:u.kg === undefined ? null : u.kg,
     sek:u.art === "sek" ? u.wert : null, ziel:u.wert + (u.art === "sek" ? " s" : " Wdh")});
   if (tr.modus === "zeit"){
     const runden = tr.liste.length ? tr.liste[0].saetze : 0;
@@ -4025,19 +4196,19 @@ function stateVorgabe(){
   };
 }
 
-const VERSION = "1.15.0";
+const VERSION = "1.17.0";
 
 let STATE = stateVorgabe();
 /* Naehrwerte: am PC aus naehrwerte.js neben der Datei, in der App ueber die Webadresse vom Server
    (stammdatenHolen(), seit 1.11.0 — das App-Repo ist oeffentlich, die Daten nicht). Die eigenen
    Produkte liegen im Protokoll und kommen bei jeder Aenderung neu dazu (lmListe). */
-let NW = naehrwerteLesen(window.NAEHRWERTE, CONFIG.stueck);
+let NW = naehrwerteLesen(window.NAEHRWERTE, CONFIG.stueck, CONFIG.portionen);
 let lmEigene = [];
 function lmListe(){ return NW.lm.concat(lmEigene); }
 function lmEigeneNeu(){ lmEigene = eigeneLesen(STATE.eigeneLm); }
 let NW_ID = new Map(NW.lm.map(l => [l.id, l]));
 function nwSetzen(roh){
-  NW = naehrwerteLesen(roh, CONFIG.stueck);
+  NW = naehrwerteLesen(roh, CONFIG.stueck, CONFIG.portionen);
   NW_ID = new Map(NW.lm.map(l => [l.id, l]));
 }
 function lmVon(id){ return lmEigene.find(l => l.id === id) || NW_ID.get(id) || null; }
@@ -5023,6 +5194,8 @@ function aktZeichnen(){
 
 function tagSummenZeichnen(){
   const e = tagEintrag();
+  const rub = rubrikTexte(e, STATE.aktArten);      // Köpfe der Rubriken (am Handy zugeklappt, 1.16.1)
+  $("rubAlkS").textContent = rub.alk; $("rubKoffS").textContent = rub.koff; $("rubAktS").textContent = rub.akt;
   const g = letztesGewicht();
   const kc = tagKcal(e), pr = tagProtein(e), al = tagAlk(e);
   const tk = tagTrainKcal(e, g, STATE.aktArten), tm = tagTrainMin(e, STATE.aktArten);
@@ -6206,7 +6379,8 @@ function bereichSetzen(b){
   window.scrollTo(0, 0);
 }
 function trPlan(){ return STATE.training.plan; }
-function trExtra(){ return {stufeDelta:STATE.training.stufeDelta, coach:STATE.training.coach, koennen:STATE.training.koennen}; }
+function trExtra(){ return {stufeDelta:STATE.training.stufeDelta, coach:STATE.training.coach, koennen:STATE.training.koennen,
+                            verlauf:STATE.training.verlauf}; }
 function trGewicht(){ return letztesGewicht(); }
 function trKcal(art, min, dist){
   const g = trGewicht();
@@ -6372,7 +6546,12 @@ function trUebersichtHtml(tr, v){
       + ' s zum Wechseln, Pause ' + u.pause + ' s nach beiden</div>';
     const vg = tr.modus === "doppel" ? (d ? "zuletzt " + d.max + (sek ? " s" : "") + " → " + 2 * d.max + " in " + d.saetze + " Sätzen" : "Maximum, dann doppelt")
       : tr.modus === "zeit" ? u.wert + (sek ? " s" : " Wdh") + " je Runde"
-      : u.saetze + " × " + u.wert + (sek ? " s" : " Wdh") + (u.pause && !u.ss ? " · Pause " + u.pause + " s" : "");
+      : u.saetze + " × " + u.wert + (sek ? " s" : " Wdh") + (u.kg !== null && u.kg !== undefined ? " · " + u.kg + " kg" : "")
+        + (u.pause && !u.ss ? " · Pause " + u.pause + " s" : "");
+    // was letztes Mal geschafft wurde (1.16.0)
+    const zl = u.zuletzt ? "Zuletzt " + trDatum(u.zuletzt.d) + ": " + u.zuletzt.wdh.join(" · ") + " Wdh"
+      + (u.zuletzt.kg ? " mit " + u.zuletzt.kg.filter(x => x !== null).join(" · ") + " kg" : "")
+      + (u.plus ? (trainingMitGewicht(u.id) ? " — alle geschafft, heute " + u.kg + " kg" : " — alle geschafft, heute 1 mehr") : "") : "";
     const stufe = u.g !== "mobil" && u.g !== "kond";
     // die Schwierigkeit 0–5 wie in der Übungsliste — die Stelle in der Kette hinge an der Ausrüstung
     const l = (CONFIG.uebKetten[u.g].find(x => x[0] === u.id) || [0, 0])[1];
@@ -6380,7 +6559,8 @@ function trUebersichtHtml(tr, v){
     const mitMax = stufe && (tr.modus === "saetze" || tr.modus === "zeit"), e = sek ? " s" : "";
     let mx = "", warn = false;
     if (mitMax){
-      mx = !u.max ? (trainingMitGewicht(u.id) ? "Gewicht so wählen, dass die letzte Wiederholung schwer fällt" : "Maximum unbekannt — Vorgabe der Stufe")
+      mx = !u.max ? (trainingMitGewicht(u.id) ? (u.kg !== null && u.kg !== undefined ? "" : "Gewicht so wählen, dass die letzte Wiederholung schwer fällt — im Ablauf festhalten")
+                                              : "Maximum unbekannt — Vorgabe der Stufe")
         : u.max.gemessen ? "aus deinem Maximum " + u.max.w + e + (ko[u.id] && ko[u.id].d ? " (" + trDatum(ko[u.id].d) + ")" : "")
         : "Maximum ≈ " + u.max.w + e + ", geschätzt aus " + ko[u.max.von].w + e + " " + CONFIG.uebungen[u.max.von].n;
       if (u.max && !sek && tr.modus === "saetze" && Z.wdh && u.wert > Z.wdh[1] && u.idx < u.kette.length - 1){
@@ -6390,6 +6570,7 @@ function trUebersichtHtml(tr, v){
     h += '<div class="trueb' + (u.ss ? " ss" : "") + '"><span class="n">' + esc(u.n) + '<small>' + (stufe ? "Schwierigkeit " + l + "/5" : "") + '</small></span>'
       + '<span class="vg">' + vg + '</span>'
       + (mx ? '<span class="mx' + (warn ? " warn" : "") + '">' + esc(mx) + '</span>' : "")
+      + (zl ? '<span class="mx' + (u.plus ? " ok" : "") + '">' + esc(zl) + '</span>' : "")
       + (stufe ? '<div class="stufe"><button type="button" class="btn mini" data-s="' + u.schluessel + '" data-d="-1"' + (u.idx === 0 ? " disabled" : "")
           + '>▼ leichter</button><button type="button" class="btn mini" data-s="' + u.schluessel + '" data-d="1"'
           + (u.idx === u.kette.length - 1 ? " disabled" : "") + '>▲ schwerer</button>'
@@ -6573,7 +6754,7 @@ function trStarten(quelle){
     info = {art:tr.art, n:tr.n, v, tr};
   }
   if (!liste.length){ melden("Nichts zu tun", "Dieses Training hat noch keine Schritte."); return; }
-  trW = {info, liste, i:0, start:Date.now(), seit:Date.now(), plus:0, zeitStart:null, zeitEnde:null, ton:null, ende:false, d:null, ergebnisse:[], maxima:[]};
+  trW = {info, liste, i:0, start:Date.now(), seit:Date.now(), plus:0, zeitStart:null, zeitEnde:null, ton:null, ende:false, d:null, ergebnisse:[], maxima:[], erfasst:{}};
   $("wiz").hidden = false; document.body.classList.add("wiz-offen");
   trBildschirm(true);
   trW.tick = setInterval(trTick, 200);
@@ -6624,8 +6805,9 @@ function trZeichnenSchritt(){
     $("wArt").textContent = s.runde ? "Runde " + s.satzNr + " von " + s.von + " · auf Zeit"
       : (s.ss ? "Supersatz " + s.ss + " · " : "") + "Satz " + s.satzNr + " von " + s.von;
     $("wName").textContent = s.n;
-    $("wZiel").textContent = s.ziel + (trW.info.tr && trW.info.tr.modus === "intervall" ? " arbeiten" : "");
-    $("wText").innerHTML = (trainingIstGeraet(s.id) ? "Gewicht so wählen, dass die letzten 2 Wiederholungen schwer, aber sauber sind.<br>" : "")
+    $("wZiel").textContent = s.ziel + (s.kg !== null && s.kg !== undefined ? " · " + s.kg + " kg" : "")
+      + (trW.info.tr && trW.info.tr.modus === "intervall" ? " arbeiten" : "");
+    $("wText").innerHTML = (trainingIstGeraet(s.id) && (s.kg === null || s.kg === undefined) ? "Gewicht so wählen, dass die letzten 2 Wiederholungen schwer, aber sauber sind.<br>" : "")
       + '<details><summary>So geht es · Video</summary>' + trAnleitungHtml(s.id) + '</details>';
     $("wWeiter").textContent = !naechster ? "Letzte Übung"
       : s.ss && naechster.ss === s.ss && naechster.satzNr === s.satzNr ? "Danach gleich im Wechsel: " + naechster.n
@@ -6645,6 +6827,9 @@ function trZeichnenSchritt(){
     $("wName").textContent = s.wechsel ? "Zur nächsten Übung" : "Durchatmen";
     $("wZiel").textContent = "";
     $("wText").textContent = "";
+    // in der Pause den Satz davor festhalten (1.16.0) — kein zusätzlicher Schritt im Ablauf
+    const vor = trW.liste[trW.i - 1];
+    if (trErfassbar(vor)) trErfassZeigen($("wText"), vor);
     const nd = trW.liste[trW.i + 1];
     $("wWeiter").textContent = nd && nd.typ === "doppel" ? "Als Nächstes: " + nd.n + " · Doppel-Up"
       : naechster ? "Als Nächstes: " + naechster.n + (naechster.von > 1 ? " · " + (naechster.runde ? "Runde " : "") + naechster.satzNr + "/" + naechster.von : "")
@@ -6661,6 +6846,39 @@ function trZeichnenSchritt(){
   }
   $("wFertig").onclick = () => { trTon(false); trWeiter(); };
   trTick();
+}
+
+/* Sätze festhalten (1.16.0): was geschafft wurde, mit Gewicht, wenn die Übung eins hat. Vorbelegt mit dem Ziel
+   (bzw. dem Gewicht des Satzes davor) — wer nichts ändert, hat das Ziel geschafft. */
+function trErfassbar(s){
+  return !!(s && s.typ === "satz" && s.sek === null && !s.runde && trW.info.tr && trW.info.tr.modus === "saetze");
+}
+function trErfassen(s, wdh, kg){
+  const e = trW.erfasst[s.id] || (trW.erfasst[s.id] = {g:s.g, ziel:s.wert, wdh:[], kg:[]});
+  e.wdh[s.satzNr - 1] = wdh; e.kg[s.satzNr - 1] = kg;
+}
+function trErfassZeigen(ziel, s){
+  const e = trW.erfasst[s.id], i = s.satzNr - 1, mitKg = trainingMitGewicht(s.id);
+  const wdh = e && e.wdh[i] !== undefined ? e.wdh[i] : s.wert;
+  const kgVor = e && e.kg[i] !== undefined ? e.kg[i] : e && i > 0 && e.kg[i - 1] !== undefined ? e.kg[i - 1] : s.kg;
+  const kg = kgVor === undefined ? null : kgVor;
+  trErfassen(s, wdh, kg);
+  ziel.innerHTML = '<div class="werf"><div class="l">Geschafft · ' + esc(s.n) + ' · Satz ' + s.satzNr + '</div>'
+    + '<span class="z"><button type="button" class="btn" data-f="w" data-d="-1">−</button>'
+    + '<input id="wErfW" type="number" inputmode="numeric" min="0" value="' + wdh + '" aria-label="Wiederholungen">'
+    + '<button type="button" class="btn" data-f="w" data-d="1">+</button><span>Wdh</span></span>'
+    + (mitKg ? '<span class="z"><button type="button" class="btn" data-f="k" data-d="-2.5">−</button>'
+      + '<input id="wErfK" type="number" inputmode="decimal" min="0" step="0.5" value="' + (kg === null ? "" : kg) + '" placeholder="?" aria-label="Gewicht in kg">'
+      + '<button type="button" class="btn" data-f="k" data-d="2.5">+</button><span>kg</span></span>' : "")
+    + '</div>';
+  const fw = $("wErfW"), fk = $("wErfK");
+  const sichern = () => trErfassen(s, Math.max(0, Math.round(zahl(fw.value) || 0)), fk && zahl(fk.value) !== null ? Math.max(0, zahl(fk.value)) : null);
+  ziel.querySelectorAll("button[data-f]").forEach(b => b.onclick = () => {
+    const f = b.dataset.f === "w" ? fw : fk;
+    f.value = Math.max(0, Math.round(((zahl(f.value) || 0) + Number(b.dataset.d)) * 10) / 10);
+    sichern();
+  });
+  fw.oninput = sichern; if (fk) fk.oninput = sichern;
 }
 
 /* Doppel-Up im Ablauf: Maximum → Anzahl → Pause → Satz → Anzahl → … bis die doppelte Menge erreicht ist.
@@ -6772,6 +6990,10 @@ function trEnde(abgebrochen){
   $("wUhr").textContent = "";
   $("wText").innerHTML = (best ? "<b>" + best + "</b><br>" : "") + (info.eigen ? "" : "Wie war es?");
   $("wWeiter").textContent = "";
+  // der letzte Satz hatte keine Pause danach: hier festhalten (1.16.0)
+  const letzter = trW.liste.slice(0, trW.i).reverse().find(x => x.typ === "satz");
+  if (trErfassbar(letzter) && !(trW.erfasst[letzter.id] && trW.erfasst[letzter.id].wdh[letzter.satzNr - 1] !== undefined))
+    trErfassZeigen($("wWeiter"), letzter);
   $("wFuss").innerHTML = (info.eigen ? "" : '<div class="wrueck"><button type="button" data-r="-1">zu schwer</button>'
       + '<button type="button" data-r="0">passend</button><button type="button" data-r="1">zu leicht</button></div>')
     + '<button type="button" class="btn" id="wVerwerfen">Nicht eintragen</button>'
@@ -6789,6 +7011,8 @@ function trEnde(abgebrochen){
     if (trW.bestzeit && (!STATE.training.best[info.v] || trW.bestzeit < STATE.training.best[info.v])) STATE.training.best[info.v] = trW.bestzeit;
     for (const r of trW.ergebnisse) STATE.training.doppel[r.id] = {max:r.max, saetze:r.saetze};
     STATE.training.koennen = doppelInsKoennen(STATE.training.koennen, trW.maxima, heute());
+    STATE.training.verlauf = verlaufEintragen(STATE.training.verlauf, trW.erfasst, heute());
+    STATE.training.koennen = koennenAusSaetzen(STATE.training.koennen, trW.erfasst, heute());
     if (rueck !== null) STATE.training.coach = Math.max(-3, Math.min(3, (zahl(STATE.training.coach) || 0) + rueck));
   };
   $("wVerwerfen").onclick = () => { merken(); schliessen(); neu(); };
@@ -7203,8 +7427,12 @@ function start(){
   lmFeld.oninput = () => { lmAktiv = 0; lmVorschlagZeichnen(); };
   lmFeld.onkeydown = lmEingabeTaste;
   lmFeld.onfocus = () => { if (lmFeld.value.trim()) lmVorschlagZeichnen(); };
-  lmFeld.onblur = () => setTimeout(() => { $("lmVorschlag").hidden = true; }, 150);
+  // nur zu, wenn der Fokus wirklich weg ist — ein Klick auf eine Quelle holt ihn zurück (27.10.2026)
+  lmFeld.onblur = () => setTimeout(() => { if (document.activeElement !== lmFeld) $("lmVorschlag").hidden = true; }, 150);
   lmStandZeigen();
+  // am Handy zugeklappt wie im Entwurf — der Kopf sagt, was drin ist (1.16.1)
+  if (window.matchMedia && window.matchMedia("(max-width:700px)").matches)
+    for (const id of ["rubAlk", "rubKoff", "rubAkt"]) $(id).open = false;
   $("versionAnz").textContent = "Version " + VERSION;
   $("alkPlus").onclick  = () => {
     const a = CONFIG.getraenke[0];
